@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MediQ — MBBS MCQ Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+--mint:#00C896;--mint-lt:#E0FAF3;--mint-dk:#00916D;
+--blue:#3B82F6;--blue-lt:#EFF6FF;--navy:#0F2744;
+--rose:#F43F5E;--rose-lt:#FFF1F3;
+--amber:#F59E0B;--amber-lt:#FFFBEB;
+--purple:#8B5CF6;--purple-lt:#F5F3FF;
+--bg:#F7F9FC;--card:#FFFFFF;--border:#E8ECF2;
+--text:#1A2332;--muted:#6B7A8D;--hint:#A8B4C4;
+--r:16px;--rs:10px;--shadow:0 2px 12px rgba(0,0,0,0.07);
+}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;position:relative;}
+.screen{display:none;min-height:100vh;padding-bottom:80px;}
+.screen.active{display:block;}
+
+/* ── Auth ── */
+.auth-bg{background:linear-gradient(160deg,#0F2744 0%,#1a3a5c 50%,#0d4a3a 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;}
+.auth-logo{font-size:2.5rem;font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:.25rem;}
+.auth-logo span{color:var(--mint);}
+.auth-tagline{color:rgba(255,255,255,0.6);font-size:.85rem;margin-bottom:2.5rem;font-style:italic;}
+.auth-card{background:#fff;border-radius:24px;padding:2rem;width:100%;max-width:380px;}
+.auth-tab{display:flex;background:#f0f4f8;border-radius:10px;padding:4px;margin-bottom:1.5rem;}
+.auth-tab button{flex:1;padding:.6rem;border:none;background:transparent;border-radius:8px;font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:500;color:var(--muted);cursor:pointer;transition:.2s;}
+.auth-tab button.active{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.field{margin-bottom:1rem;}
+.field label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.05em;}
+.field input,.field select{width:100%;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.95rem;color:var(--text);background:#fff;outline:none;transition:.2s;}
+.field input:focus,.field select:focus{border-color:var(--mint);}
+.btn-primary{width:100%;padding:.85rem;background:linear-gradient(135deg,var(--mint),var(--mint-dk));color:#fff;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:.15s;}
+.btn-primary:active{transform:scale(.98);}
+.btn-google{width:100%;padding:.8rem;background:#fff;border:1.5px solid var(--border);border-radius:12px;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.6rem;margin-top:.75rem;color:var(--text);}
+.divider{text-align:center;color:var(--hint);font-size:.8rem;margin:.75rem 0;}
+
+/* ── Nav Bar ── */
+.nav-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;padding:.5rem 0 calc(.5rem + env(safe-area-inset-bottom));}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;padding:.5rem .25rem;cursor:pointer;color:var(--hint);transition:.15s;}
+.nav-item.active{color:var(--mint);}
+.nav-item .ni{font-size:1.4rem;}
+.nav-item span{font-size:.6rem;font-weight:600;}
+
+/* ── Top Bar ── */
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.25rem .75rem;position:sticky;top:0;background:rgba(247,249,252,.95);backdrop-filter:blur(8px);z-index:50;}
+.top-bar h2{font-size:1.35rem;font-weight:800;letter-spacing:-.5px;}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--mint),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.85rem;}
+
+/* ── Cards & Layout ── */
+.card{background:var(--card);border-radius:var(--r);padding:1.25rem;border:1px solid var(--border);margin-bottom:.75rem;}
+.card-sm{background:var(--card);border-radius:var(--rs);padding:1rem;border:1px solid var(--border);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem;}
+.stat-card{background:var(--card);border-radius:12px;padding:1rem;border:1px solid var(--border);text-align:center;}
+.stat-num{font-size:1.6rem;font-weight:800;letter-spacing:-1px;}
+.stat-lbl{font-size:.7rem;color:var(--muted);font-weight:500;margin-top:.15rem;}
+.chip{display:inline-flex;align-items:center;padding:.3rem .75rem;border-radius:20px;font-size:.75rem;font-weight:600;gap:.3rem;}
+.chip-green{background:var(--mint-lt);color:var(--mint-dk);}
+.chip-blue{background:var(--blue-lt);color:var(--blue);}
+.chip-rose{background:var(--rose-lt);color:var(--rose);}
+.chip-amber{background:var(--amber-lt);color:#92400E;}
+.chip-purple{background:var(--purple-lt);color:var(--purple);}
+.section-pad{padding:0 1.25rem;}
+.row-item{display:flex;align-items:center;justify-content:space-between;padding:.85rem 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.row-item:last-child{border-bottom:none;}
+.row-item:active{opacity:.7;}
+.row-title{font-weight:600;font-size:.9rem;}
+.row-sub{font-size:.75rem;color:var(--muted);margin-top:.1rem;}
+.badge{background:var(--mint-lt);color:var(--mint-dk);font-size:.7rem;font-weight:700;padding:.2rem .5rem;border-radius:6px;}
+.chevron{color:var(--hint);font-size:.9rem;}
+
+/* ── Home ── */
+.home-hero{background:linear-gradient(135deg,#0F2744,#0d4a3a);margin:1rem 1.25rem;border-radius:20px;padding:1.5rem;color:#fff;position:relative;overflow:hidden;}
+.home-hero::before{content:'⚕';position:absolute;right:-10px;top:-10px;font-size:100px;opacity:.07;}
+.hero-greet{font-size:.8rem;opacity:.7;margin-bottom:.25rem;}
+.hero-name{font-size:1.4rem;font-weight:800;}
+.hero-sub{font-size:.82rem;opacity:.7;margin-top:.25rem;}
+.hero-pills{display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap;}
+.hero-pill{background:rgba(255,255,255,.12);color:#fff;font-size:.72rem;font-weight:600;padding:.3rem .7rem;border-radius:20px;}
+.quick-btns{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;padding:0 1.25rem;margin-bottom:1rem;}
+.quick-btn{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem;cursor:pointer;transition:.15s;text-align:left;}
+.quick-btn:active{transform:scale(.97);}
+.quick-btn .qb-icon{font-size:1.5rem;margin-bottom:.5rem;}
+.quick-btn .qb-lbl{font-size:.82rem;font-weight:700;color:var(--text);}
+.quick-btn .qb-sub{font-size:.7rem;color:var(--muted);}
+.section-hdr{padding:.25rem 1.25rem .5rem;display:flex;align-items:center;justify-content:space-between;}
+.section-hdr h3{font-size:.9rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+.section-hdr a{font-size:.78rem;color:var(--mint-dk);font-weight:600;cursor:pointer;}
+
+/* ── Subject Bank ── */
+.subj-list{padding:0 1.25rem;}
+.subj-row{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:.6rem;overflow:hidden;}
+.subj-hdr{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.1rem;cursor:pointer;}
+.subj-icon{font-size:1.2rem;margin-right:.7rem;}
+.subj-name{font-weight:700;font-size:.9rem;}
+.subj-cnt{font-size:.7rem;color:var(--mint-dk);background:var(--mint-lt);padding:.2rem .5rem;border-radius:6px;font-weight:700;}
+.subj-expand{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+.subj-expand.open{max-height:2000px;}
+.sys-item{padding:.75rem 1.1rem .75rem 2.8rem;border-top:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.sys-item:active{background:#f8fafc;}
+.topic-item{padding:.65rem 1.1rem .65rem 4rem;border-top:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:.82rem;color:var(--muted);}
+.topic-item:active{background:#f8fafc;}
+
+/* ── MCQ Test ── */
+.test-config{padding:1.25rem;}
+.mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1.25rem;}
+.mode-btn{padding:.85rem;border:2px solid var(--border);border-radius:12px;background:#fff;font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:600;color:var(--muted);cursor:pointer;transition:.2s;text-align:center;}
+.mode-btn.active{border-color:var(--mint);background:var(--mint-lt);color:var(--mint-dk);}
+.config-section{margin-bottom:1.25rem;}
+.config-label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.6rem;}
+.select-grid{display:flex;flex-wrap:wrap;gap:.5rem;}
+.sel-pill{padding:.4rem .9rem;border:1.5px solid var(--border);border-radius:20px;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;background:#fff;transition:.15s;}
+.sel-pill.active{border-color:var(--mint);background:var(--mint-lt);color:var(--mint-dk);}
+.sel-pill.active-blue{border-color:var(--blue);background:var(--blue-lt);color:var(--blue);}
+.sel-pill.active-rose{border-color:var(--rose);background:var(--rose-lt);color:var(--rose);}
+.start-btn{position:sticky;bottom:90px;margin:0 1.25rem 1rem;display:block;width:calc(100% - 2.5rem);padding:1rem;background:linear-gradient(135deg,var(--mint),var(--mint-dk));color:#fff;border:none;border-radius:14px;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,200,150,.3);}
+.start-btn:active{transform:scale(.98);}
+
+/* ── Active Test ── */
+.test-active{min-height:100vh;display:flex;flex-direction:column;}
+.test-hdr{padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem;background:#fff;border-bottom:1px solid var(--border);}
+.test-progress{flex:1;height:6px;background:#E8ECF2;border-radius:3px;overflow:hidden;}
+.test-progress-fill{height:100%;background:linear-gradient(90deg,var(--mint),var(--blue));border-radius:3px;transition:width .4s;}
+.test-timer{font-size:1.1rem;font-weight:800;color:var(--rose);min-width:40px;text-align:right;}
+.q-meta{padding:.75rem 1.25rem;display:flex;gap:.5rem;flex-wrap:wrap;}
+.q-body{padding:0 1.25rem 1rem;}
+.q-num{font-size:.75rem;color:var(--muted);font-weight:600;margin-bottom:.5rem;}
+.q-text{font-size:1rem;font-weight:500;line-height:1.6;margin-bottom:1.25rem;}
+.opt-btn{width:100%;text-align:left;padding:.9rem 1rem;border:2px solid var(--border);border-radius:12px;background:#fff;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;margin-bottom:.6rem;transition:.15s;display:flex;align-items:flex-start;gap:.75rem;}
+.opt-btn:active{transform:scale(.99);}
+.opt-btn.selected{border-color:var(--blue);background:var(--blue-lt);}
+.opt-btn.correct{border-color:var(--mint);background:var(--mint-lt);}
+.opt-btn.wrong{border-color:var(--rose);background:var(--rose-lt);}
+.opt-letter{width:24px;height:24px;border-radius:6px;background:#f0f4f8;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;margin-top:.05rem;}
+.correct .opt-letter{background:var(--mint);color:#fff;}
+.wrong .opt-letter{background:var(--rose);color:#fff;}
+.selected .opt-letter{background:var(--blue);color:#fff;}
+.explanation-box{background:#f0faf6;border-left:3px solid var(--mint);border-radius:0 10px 10px 0;padding:1rem;margin:0 1.25rem 1rem;font-size:.85rem;line-height:1.6;color:#1a4a3a;}
+.explanation-box strong{display:block;margin-bottom:.4rem;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mint-dk);}
+.test-foot{padding:1rem 1.25rem;display:flex;gap:.75rem;position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border);}
+.btn-skip{flex:1;padding:.8rem;border:1.5px solid var(--border);border-radius:12px;background:#fff;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;color:var(--muted);cursor:pointer;}
+.btn-next{flex:2;padding:.8rem;border:none;border-radius:12px;background:var(--mint);color:#fff;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;}
+.btn-bmark{width:44px;height:44px;border:1.5px solid var(--border);border-radius:12px;background:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.btn-bmark.marked{background:var(--amber-lt);border-color:var(--amber);}
+
+/* ── Results ── */
+.result-screen{padding:1.5rem 1.25rem;}
+.result-hero{background:linear-gradient(135deg,#0F2744,#0d4a3a);border-radius:20px;padding:2rem;color:#fff;text-align:center;margin-bottom:1.25rem;position:relative;overflow:hidden;}
+.result-hero::after{content:'🏆';position:absolute;right:1rem;top:.5rem;font-size:3rem;opacity:.2;}
+.result-pct{font-size:3.5rem;font-weight:800;letter-spacing:-2px;}
+.result-lbl{opacity:.7;font-size:.85rem;}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1.25rem;}
+.rg-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:.85rem;text-align:center;}
+.rg-num{font-size:1.4rem;font-weight:800;}
+.rg-lbl{font-size:.65rem;color:var(--muted);font-weight:600;}
+.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.r-btn{padding:.85rem;border-radius:12px;border:none;font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;}
+.r-btn-primary{background:var(--mint);color:#fff;}
+.r-btn-outline{background:#fff;border:1.5px solid var(--border);color:var(--text);}
+
+/* ── Flash Cards ── */
+.fc-config{padding:1.25rem;}
+.fc-card-wrapper{perspective:1000px;margin:.5rem 1.25rem;height:320px;}
+.fc-card{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .6s;}
+.fc-card.flipped{transform:rotateY(180deg);}
+.fc-face{position:absolute;inset:0;border-radius:20px;padding:1.5rem;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+.fc-front{background:linear-gradient(135deg,#0F2744,#1a3a5c);color:#fff;}
+.fc-back{background:linear-gradient(135deg,#0d4a3a,#1a5c48);color:#fff;transform:rotateY(180deg);}
+.fc-q{font-size:1rem;font-weight:600;line-height:1.6;margin-bottom:1rem;}
+.fc-hint{font-size:.75rem;opacity:.5;margin-top:auto;}
+.fc-actions{display:flex;gap:.75rem;padding:.75rem 1.25rem;align-items:center;}
+.fc-nav{flex:1;padding:.85rem;border:1.5px solid var(--border);border-radius:12px;background:#fff;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;}
+.fc-flip{flex:2;padding:.85rem;border:none;border-radius:12px;background:var(--mint);color:#fff;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;}
+.fc-progress{padding:.5rem 1.25rem;display:flex;align-items:center;gap:.75rem;}
+.fc-prog-bar{flex:1;height:4px;background:#E8ECF2;border-radius:2px;}
+.fc-prog-fill{height:100%;background:var(--mint);border-radius:2px;transition:width .3s;}
+
+/* ── Exam Analysis ── */
+.exam-tab{display:flex;background:#E8ECF2;border-radius:10px;padding:4px;margin:0 1.25rem 1rem;}
+.exam-tab button{flex:1;padding:.65rem;border:none;background:transparent;border-radius:8px;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;transition:.2s;}
+.exam-tab button.active{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.analysis-subj{padding:0 1.25rem;}
+.as-row{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:.5rem;overflow:hidden;}
+.as-hdr{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1rem;cursor:pointer;}
+.as-name{font-weight:700;font-size:.88rem;}
+.as-bar-wrap{height:4px;background:#E8ECF2;border-radius:2px;flex:1;margin:0 .75rem;}
+.as-bar{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--mint),var(--blue));}
+.as-num{font-size:.78rem;font-weight:700;color:var(--mint-dk);}
+.as-systems{border-top:1px solid var(--border);}
+.as-sys{padding:.7rem 1rem .7rem 2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:.82rem;}
+.as-sys:last-child{border-bottom:none;}
+.take-test-btn{margin:1rem 1.25rem;padding:.9rem;background:linear-gradient(135deg,var(--mint),var(--mint-dk));color:#fff;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;width:calc(100% - 2.5rem);}
+
+/* ── Previous Papers ── */
+.pp-selects{padding:0 1.25rem;}
+.pp-scroll{display:flex;gap:.5rem;overflow-x:auto;padding:.25rem 1.25rem .75rem;scrollbar-width:none;}
+.pp-scroll::-webkit-scrollbar{display:none;}
+.pp-yr{padding:.5rem 1rem;border:1.5px solid var(--border);border-radius:20px;font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap;background:#fff;color:var(--muted);flex-shrink:0;}
+.pp-yr.active{border-color:var(--mint);background:var(--mint-lt);color:var(--mint-dk);}
+
+/* ── Leaderboard ── */
+.lb-tab{display:flex;background:#E8ECF2;border-radius:10px;padding:4px;margin:0 1.25rem 1rem;}
+.lb-tab button{flex:1;padding:.6rem;border:none;background:transparent;border-radius:8px;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;transition:.2s;}
+.lb-tab button.active{background:#fff;color:var(--text);}
+.lb-row{display:flex;align-items:center;gap:.75rem;padding:.75rem 1.1rem;border-bottom:1px solid var(--border);}
+.lb-rank{font-size:1.1rem;font-weight:800;min-width:28px;text-align:center;}
+.lb-rank.gold{color:#F59E0B;}
+.lb-rank.silver{color:#94A3B8;}
+.lb-rank.bronze{color:#CD7C40;}
+.lb-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--mint),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.82rem;flex-shrink:0;}
+.lb-name{font-weight:600;font-size:.88rem;flex:1;}
+.lb-stats{text-align:right;font-size:.75rem;color:var(--muted);}
+.lb-acc{font-weight:700;font-size:.9rem;color:var(--mint-dk);}
+.friend-invite{margin:1rem 1.25rem;background:linear-gradient(135deg,var(--purple-lt),#ede9fe);border:1px solid #c4b5fd;border-radius:16px;padding:1.25rem;}
+.fi-title{font-weight:800;font-size:.95rem;margin-bottom:.35rem;}
+.fi-sub{font-size:.78rem;color:var(--muted);margin-bottom:1rem;}
+.fi-modes{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;}
+.fi-mode{padding:.4rem .8rem;border:1.5px solid #c4b5fd;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;background:#fff;color:var(--muted);}
+.fi-mode.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+
+/* ── Subscription ── */
+.sub-hero{background:linear-gradient(135deg,#7C3AED,#4F46E5);margin:1rem 1.25rem;border-radius:20px;padding:1.75rem;color:#fff;text-align:center;}
+.sub-plan{background:#fff;border:1px solid var(--border);border-radius:16px;margin:0 1.25rem .75rem;padding:1.25rem;}
+.sub-plan.featured{border-color:#8B5CF6;box-shadow:0 0 0 2px #8B5CF6;}
+.plan-badge{background:var(--purple);color:#fff;font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:6px;display:inline-block;margin-bottom:.5rem;}
+.plan-price{font-size:2rem;font-weight:800;letter-spacing:-1px;margin:.4rem 0 .2rem;}
+.plan-price span{font-size:.9rem;font-weight:400;color:var(--muted);}
+.plan-feat{font-size:.82rem;color:var(--muted);line-height:1.9;}
+.plan-feat li{display:flex;align-items:center;gap:.4rem;}
+.plan-feat li::before{content:'✓';color:var(--mint);font-weight:700;}
+
+/* ── Onboarding ── */
+.onboard{min-height:100vh;padding:2rem 1.5rem;display:flex;flex-direction:column;}
+.onboard-step{font-size:.8rem;color:var(--mint-dk);font-weight:600;margin-bottom:1rem;}
+.onboard h2{font-size:1.6rem;font-weight:800;margin-bottom:.5rem;letter-spacing:-.5px;}
+.onboard p{color:var(--muted);font-size:.9rem;margin-bottom:2rem;}
+.college-list{flex:1;overflow-y:auto;}
+.college-item{padding:.9rem 1rem;border:1.5px solid var(--border);border-radius:12px;margin-bottom:.5rem;cursor:pointer;font-weight:500;transition:.15s;}
+.college-item.selected{border-color:var(--mint);background:var(--mint-lt);color:var(--mint-dk);}
+.otp-boxes{display:flex;gap:.75rem;justify-content:center;margin:1.5rem 0;}
+.otp-box{width:52px;height:56px;border:2px solid var(--border);border-radius:12px;font-size:1.5rem;font-weight:700;text-align:center;font-family:'Outfit',sans-serif;outline:none;}
+.otp-box:focus{border-color:var(--mint);}
+
+/* ── Ad slots ── */
+.ad-slot{background:linear-gradient(90deg,#f0f4f8,#e8ecf2);border:1px dashed var(--hint);border-radius:8px;padding:.75rem;text-align:center;color:var(--hint);font-size:.72rem;font-weight:600;margin:.75rem 1.25rem;display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:60px;}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.fade-up{animation:fadeUp .35s ease both;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+.pulse{animation:pulse 1.5s ease-in-out infinite;}
+
+/* ── Misc ── */
+.back-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;flex-shrink:0;}
+.empty-state{text-align:center;padding:3rem 1.5rem;color:var(--muted);}
+.empty-state .es-icon{font-size:3rem;margin-bottom:.75rem;display:block;}
+.bookmark-list{padding:0 1.25rem;}
+.bm-item{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.6rem;}
+.bm-q{font-size:.88rem;font-weight:500;margin-bottom:.5rem;}
+.progress-ring{transform:rotate(-90deg);}
+.subject-check{display:flex;align-items:center;gap:.75rem;padding:.75rem 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.subject-check:last-child{border-bottom:none;}
+.cb{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.8rem;transition:.15s;}
+.cb.checked{background:var(--mint);border-color:var(--mint);color:#fff;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SCREEN: LOGIN
+═══════════════════════════════════════ -->
+<div id="screen-login" class="screen active">
+<div class="auth-bg">
+  <div class="auth-logo">Medi<span>Q</span></div>
+  <div class="auth-tagline" style="font-family:'Fraunces',serif;">Your MBBS companion, always ready.</div>
+  <div class="auth-card fade-up">
+    <div class="auth-tab" id="authTab">
+      <button class="active" onclick="switchAuthTab('login',this)">Sign In</button>
+      <button onclick="switchAuthTab('signup',this)">Sign Up</button>
+    </div>
+    <div id="loginForm">
+      <div class="field"><label>Email</label><input type="email" placeholder="yourname@medcollege.edu" id="loginEmail"></div>
+      <div class="field"><label>Password</label><input type="password" placeholder="••••••••" id="loginPass"></div>
+      <button class="btn-primary" onclick="handleLogin()">Sign In →</button>
+      <div class="divider">or</div>
+      <button class="btn-google" onclick="handleGoogleLogin()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.5 30.2 0 24 0 14.7 0 6.7 5.4 2.9 13.3l7.8 6C12.5 13.2 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.3 5.7c4.3-3.9 6.8-9.7 6.8-16.6z"/><path fill="#FBBC05" d="M10.7 28.7A14.4 14.4 0 0 1 10 24c0-1.6.3-3.2.7-4.7L2.9 13.3A23.8 23.8 0 0 0 0 24c0 3.8.9 7.4 2.9 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.3-5.7c-2 1.4-4.6 2.2-7.9 2.2-6.2 0-11.5-4.2-13.3-9.8l-7.8 6C6.7 42.6 14.7 48 24 48z"/></svg>
+        Continue with Google
+      </button>
+    </div>
+    <div id="signupForm" style="display:none;">
+      <div class="field"><label>Full Name</label><input type="text" placeholder="Dr. Arjun Mehta" id="suName"></div>
+      <div class="field"><label>Email</label><input type="email" placeholder="yourname@gmail.com" id="suEmail"></div>
+      <div class="field"><label>Password</label><input type="password" placeholder="Min 8 characters" id="suPass"></div>
+      <button class="btn-primary" onclick="handleSignup()">Create Account →</button>
+      <div class="divider">or</div>
+      <button class="btn-google" onclick="handleGoogleLogin()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.5 30.2 0 24 0 14.7 0 6.7 5.4 2.9 13.3l7.8 6C12.5 13.2 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.3 5.7c4.3-3.9 6.8-9.7 6.8-16.6z"/><path fill="#FBBC05" d="M10.7 28.7A14.4 14.4 0 0 1 10 24c0-1.6.3-3.2.7-4.7L2.9 13.3A23.8 23.8 0 0 0 0 24c0 3.8.9 7.4 2.9 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.3-5.7c-2 1.4-4.6 2.2-7.9 2.2-6.2 0-11.5-4.2-13.3-9.8l-7.8 6C6.7 42.6 14.7 48 24 48z"/></svg>
+        Continue with Google
+      </button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: ONBOARDING - COLLEGE
+═══════════════════════════════════════ -->
+<div id="screen-onboard-college" class="screen">
+<div class="onboard">
+  <div class="onboard-step">Step 1 of 2 · College</div>
+  <h2>Which college are you from?</h2>
+  <p>We'll personalise your experience based on your college syllabus.</p>
+  <div class="college-list" id="collegeList">
+    <div class="college-item" onclick="selectCollege(this,'AIIMS New Delhi')">AIIMS New Delhi</div>
+    <div class="college-item" onclick="selectCollege(this,'AIIMS Mumbai')">AIIMS Mumbai</div>
+    <div class="college-item" onclick="selectCollege(this,'JIPMER Puducherry')">JIPMER Puducherry</div>
+    <div class="college-item" onclick="selectCollege(this,'Maulana Azad Medical College')">Maulana Azad Medical College</div>
+    <div class="college-item" onclick="selectCollege(this,'Grant Medical College Mumbai')">Grant Medical College Mumbai</div>
+    <div class="college-item" onclick="selectCollege(this,'Seth GS Medical College')">Seth GS Medical College</div>
+    <div class="college-item" onclick="selectCollege(this,'Madras Medical College')">Madras Medical College</div>
+    <div class="college-item" onclick="selectCollege(this,'KEM Hospital Mumbai')">KEM Hospital Mumbai</div>
+    <div class="college-item" onclick="selectCollege(this,'Kasturba Medical College')">Kasturba Medical College</div>
+    <div class="college-item" onclick="selectCollege(this,'Other')">Other</div>
+  </div>
+  <button class="btn-primary" style="margin-top:1rem;" onclick="goToOTP()">Next →</button>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: ONBOARDING - OTP
+═══════════════════════════════════════ -->
+<div id="screen-onboard-otp" class="screen">
+<div class="onboard">
+  <div class="onboard-step">Step 2 of 2 · Verify Mobile</div>
+  <h2>Verify your number</h2>
+  <p>We've sent a 6-digit OTP to your mobile number for verification.</p>
+  <div class="field"><label>Mobile Number</label><input type="tel" placeholder="+91 9876543210" id="mobileNum" maxlength="14"></div>
+  <button class="btn-primary" style="margin-bottom:1.5rem;" onclick="sendOTP()">Send OTP</button>
+  <div id="otpSection" style="display:none;">
+    <div style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem;">Enter the 6-digit code</div>
+    <div class="otp-boxes">
+      <input class="otp-box" maxlength="1" oninput="otpFocus(this,1)">
+      <input class="otp-box" maxlength="1" oninput="otpFocus(this,2)">
+      <input class="otp-box" maxlength="1" oninput="otpFocus(this,3)">
+      <input class="otp-box" maxlength="1" oninput="otpFocus(this,4)">
+      <input class="otp-box" maxlength="1" oninput="otpFocus(this,5)">
+      <input class="otp-box" maxlength="1" oninput="otpFocus(this,6)">
+    </div>
+    <button class="btn-primary" onclick="verifyOTP()">Verify & Start →</button>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MAIN APP WRAPPER (post-login)
+═══════════════════════════════════════ -->
+<div id="app" style="display:none;">
+
+<!-- ── HOME ── -->
+<div id="screen-home" class="screen active">
+  <div class="top-bar">
+    <div>
+      <div style="font-size:.75rem;color:var(--muted);">Good morning 🌿</div>
+      <h2 id="homeGreet">Dr. Arjun</h2>
+    </div>
+    <div style="display:flex;align-items:center;gap:.6rem;">
+      <div class="chip chip-amber" style="font-size:.7rem;cursor:pointer;" onclick="showScreen('screen-sub')">⚡ Free</div>
+      <div class="avatar" id="homeAvatar">A</div>
+    </div>
+  </div>
+  <div class="home-hero">
+    <div class="hero-greet" style="font-family:'Fraunces',serif;font-style:italic;font-size:.85rem;">Ready to conquer today?</div>
+    <div class="hero-name" id="heroStreak">🔥 5-day streak!</div>
+    <div class="hero-sub">You've answered 347 questions this week</div>
+    <div class="hero-pills">
+      <div class="hero-pill">📊 72% accuracy</div>
+      <div class="hero-pill">⏱ 48 min avg/test</div>
+      <div class="hero-pill">🏆 Rank #23</div>
+    </div>
+  </div>
+  <div class="section-hdr"><h3>Quick Access</h3></div>
+  <div class="quick-btns">
+    <div class="quick-btn" onclick="showScreen('screen-mcq')">
+      <div class="qb-icon">🧠</div>
+      <div class="qb-lbl">Practice MCQs</div>
+      <div class="qb-sub">3 tests remaining today</div>
+    </div>
+    <div class="quick-btn" onclick="showScreen('screen-flash')">
+      <div class="qb-icon">🃏</div>
+      <div class="qb-lbl">Flash Cards</div>
+      <div class="qb-sub">128 cards pending</div>
+    </div>
+    <div class="quick-btn" onclick="showScreen('screen-papers')">
+      <div class="qb-icon">📋</div>
+      <div class="qb-lbl">Prev Papers</div>
+      <div class="qb-sub">NEET, AIIMS, INICET</div>
+    </div>
+    <div class="quick-btn" onclick="showScreen('screen-co')">
+      <div class="qb-icon">👥</div>
+      <div class="qb-lbl">Co-Study</div>
+      <div class="qb-sub">2 friends online</div>
+    </div>
+  </div>
+  <div class="section-hdr"><h3>Recent Activity</h3><a onclick="showScreen('screen-mcq')">See all</a></div>
+  <div style="padding:0 1.25rem;">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem;">
+        <div>
+          <div style="font-weight:700;font-size:.9rem;">Anatomy Mock Test</div>
+          <div style="font-size:.75rem;color:var(--muted);">Today, 9:42 AM · 50 questions</div>
+        </div>
+        <div class="chip chip-green">78%</div>
+      </div>
+      <div style="display:flex;gap:.5rem;">
+        <span class="chip chip-blue">39 correct</span>
+        <span class="chip chip-rose">8 wrong</span>
+        <span class="chip chip-amber">3 skipped</span>
+      </div>
+    </div>
+  </div>
+  <div class="ad-slot">📢 Advertisement · Upgrade to Pro to remove ads</div>
+</div>
+
+<!-- ── SUBJECTS BANK ── -->
+<div id="screen-subjects" class="screen">
+  <div class="top-bar"><h2>Subject Bank</h2><div class="chip chip-green" id="totalQChip">0 Qs</div></div>
+  <div class="subj-list" id="subjectList"></div>
+  <div class="ad-slot">📢 Advertisement</div>
+</div>
+
+<!-- ── EXAM ANALYSIS ── -->
+<div id="screen-exam" class="screen">
+  <div class="top-bar"><h2>Exam Analysis</h2></div>
+  <div class="exam-tab" id="examAnalysisTab">
+    <button class="active" onclick="switchExamTab('neet',this)">NEET</button>
+    <button onclick="switchExamTab('aiims',this)">AIIMS</button>
+    <button onclick="switchExamTab('inicet',this)">INICET</button>
+  </div>
+  <div class="analysis-subj" id="analysisSubjList"></div>
+</div>
+
+<!-- ── MCQ SECTION ── -->
+<div id="screen-mcq" class="screen">
+  <div class="top-bar">
+    <h2>Practice MCQs</h2>
+    <div class="chip chip-amber" id="dailyTests">3 left</div>
+  </div>
+  <div class="test-config" id="mcqConfig">
+    <!-- MODE -->
+    <div class="config-section">
+      <div class="config-label">Test Mode</div>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="modeExam" onclick="setMode('exam')">⏱ Exam Mode<br><small style="font-weight:400;font-size:.7rem;">Timed, results at end</small></button>
+        <button class="mode-btn" id="modeStudy" onclick="setMode('study')">📖 Study Mode<br><small style="font-weight:400;font-size:.7rem;">Instant feedback</small></button>
+      </div>
+    </div>
+    <!-- SUBJECT SELECT -->
+    <div class="config-section">
+      <div class="config-label">Select Subjects</div>
+      <div id="subjectSelect" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:12px;padding:.5rem 1rem;background:#fff;"></div>
+      <div style="display:flex;gap:.5rem;margin-top:.6rem;">
+        <button class="sel-pill active" onclick="selectAllSubjects()" id="btnAllSubj">All Subjects</button>
+        <button class="sel-pill" onclick="openGrandTest()">🏆 Grand Test</button>
+        <button class="sel-pill" onclick="openCombinedTest()">🔀 Combined</button>
+      </div>
+    </div>
+    <!-- NUM QUESTIONS -->
+    <div class="config-section">
+      <div class="config-label">Number of Questions</div>
+      <div class="select-grid" id="numQGrid">
+        <button class="sel-pill" onclick="setNum(this,10)">10</button>
+        <button class="sel-pill active" onclick="setNum(this,25)">25</button>
+        <button class="sel-pill" onclick="setNum(this,50)">50</button>
+        <button class="sel-pill" onclick="setNum(this,100)">100</button>
+        <button class="sel-pill" onclick="setNum(this,150)">150</button>
+        <button class="sel-pill" onclick="setNum(this,200)">200</button>
+      </div>
+    </div>
+    <!-- EXAM -->
+    <div class="config-section">
+      <div class="config-label">Select Exam</div>
+      <div class="select-grid">
+        <button class="sel-pill active" onclick="toggleExamFilter(this,'aiims')">AIIMS</button>
+        <button class="sel-pill active" onclick="toggleExamFilter(this,'inicet')">INICET</button>
+        <button class="sel-pill active" onclick="toggleExamFilter(this,'neet')">NEET</button>
+      </div>
+    </div>
+    <!-- DIFFICULTY -->
+    <div class="config-section">
+      <div class="config-label">Difficulty</div>
+      <div class="select-grid">
+        <button class="sel-pill active" onclick="setDiff(this,'easy')">🟢 Easy</button>
+        <button class="sel-pill" onclick="setDiff(this,'medium')">🟡 Medium</button>
+        <button class="sel-pill" onclick="setDiff(this,'hard')">🔴 Hard</button>
+        <button class="sel-pill" onclick="setDiff(this,'all')">All</button>
+      </div>
+    </div>
+  </div>
+  <button class="start-btn" onclick="startTest()">Start Test →</button>
+</div>
+
+<!-- ── ACTIVE TEST ── -->
+<div id="screen-test-active" class="screen" style="padding-bottom:0;">
+  <div class="test-active">
+    <div class="test-hdr">
+      <button class="back-btn" onclick="confirmEndTest()">←</button>
+      <div class="test-progress"><div class="test-progress-fill" id="testProgFill" style="width:0%"></div></div>
+      <div id="qCounter" style="font-size:.8rem;color:var(--muted);min-width:40px;text-align:center;"></div>
+      <div class="test-timer" id="testTimer" style="display:none;">1:00</div>
+      <button class="btn-bmark" id="bmarkBtn" onclick="toggleBookmark()">🔖</button>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding-bottom:80px;">
+      <div class="q-meta" id="qMeta"></div>
+      <div class="q-body">
+        <div class="q-num" id="qNum"></div>
+        <div class="q-text" id="qText"></div>
+        <div id="optionsContainer"></div>
+      </div>
+      <div class="explanation-box" id="explanationBox" style="display:none;"></div>
+    </div>
+    <div class="test-foot">
+      <button class="btn-skip" id="skipBtn" onclick="skipQuestion()">Skip</button>
+      <button class="btn-next" id="nextBtn" onclick="nextQuestion()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── RESULTS ── -->
+<div id="screen-result" class="screen">
+  <div style="padding:1rem 1.25rem .5rem;display:flex;align-items:center;gap:.75rem;">
+    <button class="back-btn" onclick="showScreen('screen-mcq')">←</button>
+    <h2>Test Results</h2>
+  </div>
+  <div class="result-screen">
+    <div class="result-hero">
+      <div class="result-pct" id="resPct">0%</div>
+      <div class="result-lbl">Overall Score</div>
+      <div style="margin-top:.75rem;opacity:.8;font-size:.82rem;" id="resMsg"></div>
+    </div>
+    <div class="result-grid">
+      <div class="rg-card"><div class="rg-num" style="color:var(--mint);" id="resCorrect">0</div><div class="rg-lbl">Correct</div></div>
+      <div class="rg-card"><div class="rg-num" style="color:var(--rose);" id="resWrong">0</div><div class="rg-lbl">Incorrect</div></div>
+      <div class="rg-card"><div class="rg-num" style="color:var(--amber);" id="resSkipped">0</div><div class="rg-lbl">Skipped</div></div>
+    </div>
+    <div class="result-actions" style="margin-bottom:1rem;">
+      <button class="r-btn r-btn-primary" onclick="reviewAnswers()">Review Answers</button>
+      <button class="r-btn r-btn-outline" onclick="showScreen('screen-mcq')">New Test</button>
+    </div>
+    <div class="result-actions" style="margin-bottom:1rem;">
+      <button class="r-btn r-btn-outline" onclick="showBookmarks()">🔖 Bookmarks</button>
+      <button class="r-btn r-btn-outline" onclick="showScreen('screen-flash')">🃏 Flash Cards</button>
+    </div>
+    <div class="ad-slot">📢 Advertisement · Watch a short ad to unlock your next test</div>
+    <div id="reviewSection" style="display:none;margin-top:.5rem;">
+      <div style="font-weight:800;font-size:.95rem;margin-bottom:.75rem;">Answer Review</div>
+      <div id="reviewList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PREVIOUS PAPERS ── -->
+<div id="screen-papers" class="screen">
+  <div class="top-bar"><h2>Previous Papers</h2></div>
+  <div class="pp-selects">
+    <div class="config-label" style="padding:0;margin-bottom:.5rem;">Select Exam</div>
+    <div class="select-grid" style="margin-bottom:1rem;">
+      <button class="sel-pill active" onclick="setPPExam(this,'neet')">NEET</button>
+      <button class="sel-pill" onclick="setPPExam(this,'aiims')">AIIMS</button>
+      <button class="sel-pill" onclick="setPPExam(this,'inicet')">INICET</button>
+    </div>
+    <div class="config-label" style="padding:0;margin-bottom:.5rem;">Select Year</div>
+  </div>
+  <div class="pp-scroll" id="yearScroll"></div>
+  <div class="pp-selects">
+    <div class="config-label" style="padding:0;margin-bottom:.5rem;margin-top:.5rem;">Test Mode</div>
+    <div class="mode-toggle" style="margin-bottom:1rem;">
+      <button class="mode-btn active" id="ppModeExam" onclick="setPPMode('exam')">⏱ Exam Mode</button>
+      <button class="mode-btn" id="ppModeStudy" onclick="setPPMode('study')">📖 Study Mode</button>
+    </div>
+    <div class="config-label" style="padding:0;margin-bottom:.5rem;">Filter Subjects</div>
+    <div id="ppSubjFilter" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:12px;padding:.5rem 1rem;background:#fff;margin-bottom:1rem;"></div>
+  </div>
+  <button class="start-btn" style="position:relative;bottom:auto;margin:0 1.25rem 1.5rem;width:calc(100% - 2.5rem);" onclick="startPaperTest()">Start Previous Paper Test →</button>
+</div>
+
+<!-- ── FLASH CARDS ── -->
+<div id="screen-flash" class="screen">
+  <div class="top-bar"><h2>Flash Cards</h2></div>
+  <div id="fcConfigView">
+    <div class="fc-config">
+      <div class="config-section">
+        <div class="config-label">Card Source</div>
+        <div class="select-grid">
+          <button class="sel-pill active" onclick="setFCSource(this,'all')">All Cards</button>
+          <button class="sel-pill" onclick="setFCSource(this,'bookmarks')">🔖 Bookmarks</button>
+          <button class="sel-pill" onclick="setFCSource(this,'subject')">By Subject</button>
+        </div>
+      </div>
+      <div class="config-section" id="fcSubjSelect" style="display:none;">
+        <div class="config-label">Select Subject</div>
+        <div id="fcSubjList"></div>
+      </div>
+      <button class="btn-primary" onclick="startFlashCards()" style="margin-top:.5rem;">Start Flash Cards →</button>
+    </div>
+  </div>
+  <div id="fcActiveView" style="display:none;">
+    <div class="fc-progress">
+      <span style="font-size:.78rem;color:var(--muted);" id="fcProgressTxt">1/10</span>
+      <div class="fc-prog-bar"><div class="fc-prog-fill" id="fcProgFill" style="width:10%"></div></div>
+      <button style="background:none;border:none;font-size:.8rem;color:var(--mint-dk);font-weight:600;cursor:pointer;" onclick="endFlashCards()">End</button>
+    </div>
+    <div class="fc-card-wrapper">
+      <div class="fc-card" id="fcCard">
+        <div class="fc-face fc-front">
+          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;opacity:.5;margin-bottom:1rem;">Question</div>
+          <div class="fc-q" id="fcQuestion"></div>
+          <div class="fc-hint">Tap "Reveal" to see answer</div>
+        </div>
+        <div class="fc-face fc-back">
+          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;opacity:.5;margin-bottom:1rem;">Answer</div>
+          <div class="fc-q" id="fcAnswer"></div>
+          <div style="font-size:.78rem;opacity:.7;margin-top:.75rem;line-height:1.6;" id="fcExplanation"></div>
+        </div>
+      </div>
+    </div>
+    <div class="fc-actions">
+      <button class="fc-nav" onclick="prevFlashCard()">← Prev</button>
+      <button class="fc-flip" onclick="flipCard()" id="fcFlipBtn">Reveal ✨</button>
+      <button class="btn-bmark" id="fcBmark" onclick="toggleFCBookmark()" style="border-radius:12px;">🔖</button>
+    </div>
+    <div class="fc-actions" style="justify-content:flex-end;padding-top:0;">
+      <button class="fc-nav" onclick="nextFlashCard()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CO-STUDY ── -->
+<div id="screen-co" class="screen">
+  <div class="top-bar"><h2>Co-Study</h2></div>
+  <!-- Friend invite -->
+  <div class="friend-invite">
+    <div class="fi-title">🎮 Challenge a Friend</div>
+    <div class="fi-sub">Pick a mode, set your questions, send the link!</div>
+    <div class="fi-modes">
+      <button class="fi-mode active" onclick="setCOMode(this,'battle')">⚔️ Battle</button>
+      <button class="fi-mode" onclick="setCOMode(this,'fastest')">⚡ Fastest Finger</button>
+      <button class="fi-mode" onclick="setCOMode(this,'together')">📖 Study Together</button>
+    </div>
+    <div class="config-section" style="margin-bottom:.75rem;">
+      <div class="config-label">Subject</div>
+      <div class="select-grid">
+        <button class="sel-pill active" onclick="togglePill(this)">All</button>
+        <button class="sel-pill" onclick="togglePill(this)">Anatomy</button>
+        <button class="sel-pill" onclick="togglePill(this)">Physiology</button>
+      </div>
+    </div>
+    <button class="btn-primary" style="font-size:.88rem;padding:.75rem;" onclick="generateInviteLink()">Generate Invite Link 🔗</button>
+    <div id="inviteLink" style="display:none;margin-top:.75rem;background:rgba(0,0,0,.08);border-radius:8px;padding:.75rem;font-size:.75rem;word-break:break-all;color:#fff;"></div>
+  </div>
+  <!-- Leaderboard tabs -->
+  <div class="lb-tab">
+    <button class="active" onclick="switchLBTab('global',this)">🌍 Global</button>
+    <button onclick="switchLBTab('friends',this)">👥 Friends</button>
+    <button onclick="switchLBTab('history',this)">📋 History</button>
+  </div>
+  <div id="lbGlobal" class="card" style="margin:0 1.25rem;padding:0;overflow:hidden;">
+    <div class="lb-row" style="background:#fffbeb;">
+      <div class="lb-rank gold">🥇</div>
+      <div class="lb-avatar" style="background:linear-gradient(135deg,#F59E0B,#DC2626);">PM</div>
+      <div class="flex-1"><div class="lb-name">Priya Mehta</div><div style="font-size:.7rem;color:var(--muted);">247 tests · AIIMS Delhi</div></div>
+      <div class="lb-stats"><div class="lb-acc">94%</div><div>accuracy</div></div>
+    </div>
+    <div class="lb-row">
+      <div class="lb-rank silver">🥈</div>
+      <div class="lb-avatar" style="background:linear-gradient(135deg,#94A3B8,#475569);">RK</div>
+      <div class="flex-1"><div class="lb-name">Rahul Kumar</div><div style="font-size:.7rem;color:var(--muted);">198 tests · JIPMER</div></div>
+      <div class="lb-stats"><div class="lb-acc">91%</div><div>accuracy</div></div>
+    </div>
+    <div class="lb-row">
+      <div class="lb-rank bronze">🥉</div>
+      <div class="lb-avatar" style="background:linear-gradient(135deg,#CD7C40,#92400E);">AJ</div>
+      <div class="flex-1"><div class="lb-name">Anjali Joshi</div><div style="font-size:.7rem;color:var(--muted);">156 tests · KEM</div></div>
+      <div class="lb-stats"><div class="lb-acc">89%</div><div>accuracy</div></div>
+    </div>
+    <div class="lb-row" style="background:var(--mint-lt);">
+      <div class="lb-rank" style="color:var(--mint);">23</div>
+      <div class="lb-avatar">A</div>
+      <div class="flex-1"><div class="lb-name">You</div><div style="font-size:.7rem;color:var(--muted);">84 tests</div></div>
+      <div class="lb-stats"><div class="lb-acc">72%</div><div>accuracy</div></div>
+    </div>
+  </div>
+  <div id="lbFriends" style="display:none;padding:0 1.25rem;">
+    <div class="empty-state"><span class="es-icon">👥</span><div style="font-weight:600;">No friends yet!</div><div style="font-size:.82rem;">Share your invite link to add friends.</div></div>
+  </div>
+  <div id="lbHistory" style="display:none;padding:0 1.25rem;">
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:700;font-size:.88rem;">vs Priya Mehta</div><div style="font-size:.75rem;color:var(--muted);">Battle Mode · 25 Qs · Yesterday</div></div><div class="chip chip-rose">Lost 12-18</div></div></div>
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:700;font-size:.88rem;">vs Rahul Kumar</div><div style="font-size:.75rem;color:var(--muted);">Fastest Finger · 10 Qs · 2 days ago</div></div><div class="chip chip-green">Won 8-6</div></div></div>
+  </div>
+  <div class="ad-slot">📢 Advertisement</div>
+</div>
+
+<!-- ── SUBSCRIPTION ── -->
+<div id="screen-sub" class="screen">
+  <div style="padding:1rem 1.25rem .5rem;display:flex;align-items:center;gap:.75rem;">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <h2>MediQ Pro</h2>
+  </div>
+  <div class="sub-hero">
+    <div style="font-size:2rem;margin-bottom:.5rem;">⚡</div>
+    <div style="font-size:1.4rem;font-weight:800;">Unlock Unlimited Access</div>
+    <div style="opacity:.8;font-size:.85rem;margin-top:.4rem;">No ads. No limits. Just pure preparation.</div>
+  </div>
+  <div class="sub-plan featured">
+    <div class="plan-badge">Most Popular</div>
+    <div style="font-weight:800;font-size:1.1rem;">MediQ Pro Monthly</div>
+    <div class="plan-price">₹299<span>/month</span></div>
+    <ul class="plan-feat">
+      <li>Unlimited daily tests</li>
+      <li>No advertisements</li>
+      <li>Priority question database updates</li>
+      <li>Advanced analytics & insights</li>
+      <li>Offline mode</li>
+      <li>Co-study with unlimited friends</li>
+    </ul>
+    <button class="btn-primary" style="margin-top:1rem;" onclick="alert('Redirecting to payment gateway...')">Subscribe Now →</button>
+  </div>
+  <div class="sub-plan">
+    <div style="font-weight:800;font-size:1.1rem;">MediQ Pro Annual</div>
+    <div class="plan-price">₹1,999<span>/year</span></div>
+    <div style="font-size:.78rem;color:var(--mint-dk);font-weight:600;margin-bottom:.75rem;">Save ₹1,589 vs monthly!</div>
+    <ul class="plan-feat">
+      <li>Everything in Monthly</li>
+      <li>2 months free</li>
+      <li>Early access to new features</li>
+    </ul>
+    <button class="btn-primary" style="margin-top:1rem;background:linear-gradient(135deg,var(--blue),#1D4ED8);" onclick="alert('Redirecting to payment gateway...')">Best Value →</button>
+  </div>
+  <div class="sub-plan">
+    <div style="font-weight:800;font-size:1.1rem;color:var(--muted);">Free Tier</div>
+    <div class="plan-price" style="font-size:1.4rem;">₹0</div>
+    <ul class="plan-feat" style="color:var(--muted);">
+      <li>3 tests per day</li>
+      <li>Watch rewarded ads to unlock tests</li>
+      <li>Basic analytics</li>
+      <li>Limited co-study sessions</li>
+    </ul>
+  </div>
+  <div style="height:1rem;"></div>
+</div>
+
+<!-- ── BOTTOM NAV BAR ── -->
+<nav class="nav-bar">
+  <div class="nav-item active" onclick="navTo('home')" data-nav="home"><span class="ni">🏠</span><span>Home</span></div>
+  <div class="nav-item" onclick="navTo('subjects')" data-nav="subjects"><span class="ni">📚</span><span>Subjects</span></div>
+  <div class="nav-item" onclick="navTo('exam')" data-nav="exam"><span class="ni">📊</span><span>Analysis</span></div>
+  <div class="nav-item" onclick="navTo('mcq')" data-nav="mcq"><span class="ni">🧠</span><span>MCQs</span></div>
+  <div class="nav-item" onclick="navTo('flash')" data-nav="flash"><span class="ni">🃏</span><span>Cards</span></div>
+  <div class="nav-item" onclick="navTo('papers')" data-nav="papers"><span class="ni">📋</span><span>Papers</span></div>
+  <div class="nav-item" onclick="navTo('co')" data-nav="co"><span class="ni">👥</span><span>Co-Study</span></div>
+</nav>
+
+</div><!-- end #app -->
+
+<script>
+// ═══════════════════════════════════════════
+// DATA & STATE
+// ═══════════════════════════════════════════
+
+const SUBJECTS = [
+  {name:'Anatomy',icon:'🦴',systems:[
+    {name:'Musculoskeletal',topics:['Upper Limb','Lower Limb','Vertebral Column','Joints']},
+    {name:'Cardiovascular',topics:['Heart','Arteries','Veins','Lymphatics']},
+    {name:'Neuroanatomy',topics:['Brain','Spinal Cord','Cranial Nerves','PNS']},
+    {name:'Thorax',topics:['Lungs','Pleura','Mediastinum','Diaphragm']},
+    {name:'Abdomen',topics:['GI Tract','Liver','Kidneys','Peritoneum']},
+    {name:'Head & Neck',topics:['Skull','Orbit','Larynx','Neck Triangles']},
+    {name:'Embryology',topics:['Gametogenesis','Organogenesis','Teratology']}
+  ]},
+  {name:'Physiology',icon:'💓',systems:[
+    {name:'Cardiovascular',topics:['Cardiac Cycle','Blood Pressure','ECG','Hemodynamics']},
+    {name:'Respiratory',topics:['Lung Volumes','Gas Exchange','Respiratory Control','Spirometry']},
+    {name:'Renal',topics:['Glomerular Filtration','Tubular Function','Acid-Base','Micturition']},
+    {name:'Endocrine',topics:['Thyroid','Adrenal','Pituitary','Pancreas']},
+    {name:'Neurophysiology',topics:['Action Potential','Synaptic Transmission','Neurotransmitters','Reflexes']},
+    {name:'Blood',topics:['Hematopoiesis','Hemoglobin','Coagulation','Blood Groups']},
+    {name:'GI Physiology',topics:['Secretion','Motility','Digestion','Absorption']}
+  ]},
+  {name:'Biochemistry',icon:'🧪',systems:[
+    {name:'Metabolism',topics:['Glycolysis','TCA Cycle','Gluconeogenesis','Fatty Acid Metabolism']},
+    {name:'Molecular Biology',topics:['DNA Replication','Transcription','Translation','Gene Regulation']},
+    {name:'Enzymology',topics:['Enzyme Kinetics','Inhibition','Cofactors']},
+    {name:'Vitamins',topics:['Fat Soluble','Water Soluble','Deficiency Diseases']}
+  ]},
+  {name:'Pathology',icon:'🔬',systems:[
+    {name:'General Pathology',topics:['Cell Injury','Inflammation','Healing','Neoplasia']},
+    {name:'Hematology',topics:['Anemias','Leukemia','Lymphoma','Coagulation Disorders']},
+    {name:'Systemic Pathology',topics:['CVS','Respiratory','GI','Renal','Liver']}
+  ]},
+  {name:'Pharmacology',icon:'💊',systems:[
+    {name:'General Pharmacology',topics:['Pharmacokinetics','Pharmacodynamics','Drug Interactions']},
+    {name:'ANS',topics:['Cholinergics','Anticholinergics','Adrenergics','Antiadrenergics']},
+    {name:'Cardiovascular',topics:['Antihypertensives','Antiarrhythmics','Heart Failure Drugs']},
+    {name:'Antimicrobials',topics:['Penicillins','Cephalosporins','Fluoroquinolones','Antifungals']}
+  ]},
+  {name:'Microbiology',icon:'🦠',systems:[
+    {name:'Bacteriology',topics:['Gram Positive','Gram Negative','Spirochetes','Mycobacteria']},
+    {name:'Virology',topics:['DNA Viruses','RNA Viruses','Retroviruses','Hepatitis Viruses']},
+    {name:'Parasitology',topics:['Protozoa','Helminths','Arthropod Vectors']},
+    {name:'Mycology',topics:['Superficial','Deep','Opportunistic Fungi']}
+  ]},
+  {name:'Forensic Medicine',icon:'⚖️',systems:[
+    {name:'Thanatology',topics:['Death Certification','Post-mortem Changes','Decomposition']},
+    {name:'Traumatology',topics:['Mechanical Injuries','Firearm Injuries','Sexual Offences']},
+    {name:'Toxicology',topics:['Corrosive Poisons','Sedative Poisons','Organic Poisons']}
+  ]},
+  {name:'Community Medicine',icon:'🌍',systems:[
+    {name:'Epidemiology',topics:['Study Designs','Bias','Screening','Disease Burden']},
+    {name:'Biostatistics',topics:['Measures of Central Tendency','Tests of Significance','Correlation']},
+    {name:'Health Programs',topics:['Immunization','National Health Programs','MCH']}
+  ]},
+  {name:'Medicine',icon:'🩺',systems:[
+    {name:'Cardiology',topics:['IHD','Heart Failure','Arrhythmias','Valvular Heart Disease']},
+    {name:'Pulmonology',topics:['COPD','Asthma','TB','Pneumonia','ILD']},
+    {name:'Nephrology',topics:['CKD','GN','Nephrotic Syndrome','AKI']},
+    {name:'Gastroenterology',topics:['Peptic Ulcer','IBD','Cirrhosis','Hepatitis']},
+    {name:'Neurology',topics:['Stroke','Epilepsy','Meningitis','Dementia']},
+    {name:'Endocrinology',topics:['Diabetes','Thyroid Disorders','Adrenal Disorders']}
+  ]},
+  {name:'Surgery',icon:'🔪',systems:[
+    {name:'General Surgery',topics:['Wounds','Hernias','Appendix','Gallbladder']},
+    {name:'Orthopaedics',topics:['Fractures','Dislocations','Bone Tumors','Joint Disorders']},
+    {name:'Urology',topics:['Renal Calculi','BPH','Bladder Tumors','Urinary Tract']},
+    {name:'Neurosurgery',topics:['Head Injury','Brain Tumors','Spinal Cord']}
+  ]},
+  {name:'OBG',icon:'👶',systems:[
+    {name:'Obstetrics',topics:['Normal Labour','Antenatal Care','Complications','Puerperium']},
+    {name:'Gynaecology',topics:['Menstrual Disorders','Infertility','Fibroids','Ovarian Tumors']},
+    {name:'Family Planning',topics:['Contraception','MTP','Sterilization']}
+  ]},
+  {name:'Paediatrics',icon:'🧸',systems:[
+    {name:'Neonatology',topics:['Birth Asphyxia','Jaundice','LBW','Prematurity']},
+    {name:'Nutrition',topics:['PEM','Rickets','Vitamin Deficiencies']},
+    {name:'Growth & Development',topics:['Milestones','Growth Charts','Developmental Disorders']}
+  ]},
+  {name:'Ophthalmology',icon:'👁️',systems:[
+    {name:'Anterior Segment',topics:['Cornea','Lens','Glaucoma','Uveitis']},
+    {name:'Posterior Segment',topics:['Retina','Vitreous','Optic Nerve']},
+    {name:'Extraocular',topics:['Squint','Orbit','Lacrimal System']}
+  ]},
+  {name:'ENT',icon:'👂',systems:[
+    {name:'Ear',topics:['Otitis Media','SNHL','Mastoid','Vestibular Disorders']},
+    {name:'Nose',topics:['Sinusitis','DNS','Nasal Polyps','Epistaxis']},
+    {name:'Throat',topics:['Tonsillitis','Laryngitis','Vocal Cord Disorders']}
+  ]},
+  {name:'Dermatology',icon:'🩹',systems:[
+    {name:'Inflammatory',topics:['Eczema','Psoriasis','Urticaria','Acne']},
+    {name:'Infections',topics:['Bacterial','Fungal','Viral','Parasitic']},
+    {name:'Neoplastic',topics:['Melanoma','BCC','SCC','Nevi']}
+  ]},
+  {name:'Psychiatry',icon:'🧬',systems:[
+    {name:'Psychoses',topics:['Schizophrenia','Bipolar','Schizoaffective']},
+    {name:'Neuroses',topics:['Anxiety','OCD','PTSD','Phobias']},
+    {name:'Substance Use',topics:['Alcohol','Opioids','Stimulants']}
+  ]},
+  {name:'Radiology',icon:'☢️',systems:[
+    {name:'Plain X-rays',topics:['Chest','Abdomen','Skeletal','Head']},
+    {name:'CT/MRI',topics:['Brain CT','Abdominal CT','MRI Spine','Contrast Studies']},
+    {name:'Interventional',topics:['Angiography','Biopsy','Drainage']}
+  ]},
+  {name:'Anaesthesia',icon:'💉',systems:[
+    {name:'General Anaesthesia',topics:['Induction Agents','Inhalational Agents','Muscle Relaxants']},
+    {name:'Regional Anaesthesia',topics:['Spinal','Epidural','Nerve Blocks']},
+    {name:'Critical Care',topics:['Ventilation','Shock','Pain Management']}
+  ]},
+  {name:'Orthopaedics',icon:'🦿',systems:[
+    {name:'Trauma',topics:['Fracture Management','Dislocations','Soft Tissue']},
+    {name:'Infections',topics:['Osteomyelitis','Septic Arthritis','TB Bone']},
+    {name:'Tumors',topics:['Benign Bone','Malignant Bone','Soft Tissue Tumors']}
+  ]}
+];
+
+let allQuestions = [];
+let allFlashCards = [];
+let state = {
+  user: null,
+  currentScreen: 'login',
+  testMode: 'exam',
+  selectedSubjects: [...SUBJECTS.map(s=>s.name)],
+  selectedExams: ['aiims','inicet','neet'],
+  selectedDiff: 'easy',
+  numQuestions: 25,
+  currentTest: [],
+  currentQIndex: 0,
+  answers: [],
+  bookmarks: new Set(),
+  fcBookmarks: new Set(),
+  timerInterval: null,
+  timeLeft: 60,
+  subjectExpanded: {},
+  analysisExpanded: {},
+  currentExamAnalysis: 'neet',
+  ppExam: 'neet',
+  ppYear: null,
+  ppMode: 'exam',
+  ppSelectedSubjects: [...SUBJECTS.map(s=>s.name)],
+  fcSource: 'all',
+  fcCards: [],
+  fcIndex: 0,
+  fcFlipped: false,
+  coMode: 'battle',
+  lbTab: 'global',
+  selectedCollege: null,
+  lastScreen: 'home',
+};
+
+// ═══════════════════════════════════════════
+// LOAD DATA FROM JSON FILES
+// ═══════════════════════════════════════════
+
+async function loadQuestionsFromFolder() {
+  // In a real deployment, this would fetch from the /questions/ folder
+  // For demo, we'll use embedded data + simulate fetch
+  const demoFiles = ['anatomy','physiology'];
+  const loaded = [];
+  
+  for (const file of demoFiles) {
+    try {
+      const r = await fetch(`questions/${file}.json`);
+      if (r.ok) {
+        const data = await r.json();
+        loaded.push(...data);
+      }
+    } catch(e) {
+      // Use embedded fallback
+    }
+  }
+  
+  if (loaded.length === 0) {
+    // Embedded demo questions
+    allQuestions = getDemoQuestions();
+  } else {
+    allQuestions = loaded;
+  }
+  
+  updateSubjectCounts();
+  renderSubjectList();
+  renderSubjectSelect();
+  renderPPSubjectFilter();
+  renderAnalysis();
+  document.getElementById('totalQChip').textContent = allQuestions.length + ' Qs';
+}
+
+async function loadFlashCardsFromFolder() {
+  try {
+    const r = await fetch('flashcards/flashcards.json');
+    if (r.ok) {
+      allFlashCards = await r.json();
+    } else {
+      allFlashCards = getDemoFlashCards();
+    }
+  } catch(e) {
+    allFlashCards = getDemoFlashCards();
+  }
+  renderFCSubjList();
+}
+
+function getDemoQuestions() {
+  return [
+    {id:'anat_001',subject:'Anatomy',system:'Musculoskeletal',topic:'Upper Limb',question:"Which nerve is responsible for the 'claw hand' deformity?",options:['Median nerve','Radial nerve','Ulnar nerve','Musculocutaneous nerve'],correct:2,explanation:'The ulnar nerve, when injured at the wrist, causes claw hand due to paralysis of the lumbricals of the ring and little fingers, causing hyperextension at MCP joints and flexion at IP joints.',difficulty:'medium',exam:'neet',year:2022},
+    {id:'anat_002',subject:'Anatomy',system:'Musculoskeletal',topic:'Upper Limb',question:'The flexor retinaculum is attached to which bones?',options:['Scaphoid, trapezium, pisiform, hamate','Lunate, capitate, triquetrum, trapezoid','Scaphoid, lunate, triquetrum, pisiform','Trapezium, trapezoid, capitate, hamate'],correct:0,explanation:'The flexor retinaculum is attached laterally to the scaphoid tubercle and trapezium ridge, and medially to the pisiform and hook of hamate.',difficulty:'hard',exam:'aiims',year:2019},
+    {id:'anat_003',subject:'Anatomy',system:'Cardiovascular',topic:'Heart',question:'The SA node is supplied by which artery in majority of cases?',options:['Left circumflex artery','Left anterior descending artery','Right coronary artery','Posterior descending artery'],correct:2,explanation:'The SA node is supplied by the SA nodal artery, arising from the right coronary artery in about 60% of cases and from the left circumflex artery in about 40% of cases.',difficulty:'easy',exam:'neet',year:2021},
+    {id:'anat_004',subject:'Anatomy',system:'Neuroanatomy',topic:'Brain',question:"Broca's area is located in which part of the brain?",options:['Posterior parietal lobe','Inferior frontal gyrus','Superior temporal gyrus','Angular gyrus'],correct:1,explanation:"Broca's area (Brodmann areas 44 and 45) is located in the inferior frontal gyrus of the dominant hemisphere. It is responsible for speech production.",difficulty:'easy',exam:'neet',year:2020},
+    {id:'anat_005',subject:'Anatomy',system:'Musculoskeletal',topic:'Lower Limb',question:'Which muscle is the chief abductor of the hip?',options:['Gluteus maximus','Gluteus medius','Tensor fasciae latae','Piriformis'],correct:1,explanation:'Gluteus medius is the chief abductor of the hip joint, supplied by the superior gluteal nerve. Its weakness leads to Trendelenburg sign.',difficulty:'easy',exam:'neet',year:2018},
+    {id:'phys_001',subject:'Physiology',system:'Cardiovascular',topic:'Cardiac Cycle',question:'What is the normal cardiac output at rest?',options:['3.5 L/min','5 L/min','7.5 L/min','10 L/min'],correct:1,explanation:'Normal cardiac output at rest is approximately 5 L/min (stroke volume ~70ml × heart rate ~70 bpm). This can increase up to 25 L/min during strenuous exercise.',difficulty:'easy',exam:'neet',year:2023},
+    {id:'phys_002',subject:'Physiology',system:'Respiratory',topic:'Lung Volumes',question:'Which lung volume cannot be measured by spirometry?',options:['Tidal volume','Inspiratory reserve volume','Residual volume','Expiratory reserve volume'],correct:2,explanation:'Residual volume cannot be measured by spirometry because it is the air remaining in lungs after maximum expiration. It requires helium dilution or body plethysmography.',difficulty:'medium',exam:'aiims',year:2019},
+    {id:'phys_003',subject:'Physiology',system:'Renal',topic:'Glomerular Filtration',question:'Normal GFR in adult male is approximately:',options:['80 mL/min','100 mL/min','125 mL/min','150 mL/min'],correct:2,explanation:'Normal GFR is approximately 125 mL/min (180 L/day) in adult males. It is measured using inulin clearance as the gold standard.',difficulty:'easy',exam:'neet',year:2022},
+    {id:'phys_004',subject:'Physiology',system:'Endocrine',topic:'Thyroid',question:'T3 is how many times more potent than T4?',options:['2-3 times','4-5 times','3-4 times','10 times'],correct:1,explanation:'T3 (triiodothyronine) is 4-5 times more potent than T4 (thyroxine). T3 has a shorter half-life (~1 day) compared to T4 (~7 days).',difficulty:'medium',exam:'inicet',year:2021},
+    {id:'phys_005',subject:'Physiology',system:'Neurophysiology',topic:'Neurotransmitters',question:"Which neurotransmitter is deficient in Parkinson's disease?",options:['Serotonin','Acetylcholine','GABA','Dopamine'],correct:3,explanation:"Parkinson's disease is characterized by degeneration of dopaminergic neurons in the substantia nigra pars compacta, leading to dopamine deficiency in the striatum.",difficulty:'easy',exam:'neet',year:2021},
+    {id:'bio_001',subject:'Biochemistry',system:'Metabolism',topic:'Glycolysis',question:'How many net ATP are produced per glucose molecule in glycolysis?',options:['1 ATP','2 ATP','4 ATP','8 ATP'],correct:1,explanation:'Glycolysis produces 4 ATP gross but uses 2 ATP, giving net 2 ATP. It also produces 2 NADH and 2 pyruvate per glucose molecule.',difficulty:'easy',exam:'neet',year:2020},
+    {id:'bio_002',subject:'Biochemistry',system:'Molecular Biology',topic:'DNA Replication',question:'Which enzyme is responsible for unwinding of DNA during replication?',options:['DNA Polymerase','Ligase','Helicase','Primase'],correct:2,explanation:'Helicase unwinds the DNA double helix by breaking hydrogen bonds between base pairs, creating replication forks. It works in conjunction with topoisomerase.',difficulty:'medium',exam:'aiims',year:2018},
+    {id:'path_001',subject:'Pathology',system:'General Pathology',topic:'Neoplasia',question:'Which type of necrosis is characteristic of tuberculosis?',options:['Liquefactive necrosis','Coagulative necrosis','Caseous necrosis','Fat necrosis'],correct:2,explanation:'Caseous necrosis is characteristic of tuberculosis. The term caseous (cheese-like) describes the gross appearance. Microscopically it appears amorphous, granular, and eosinophilic.',difficulty:'easy',exam:'neet',year:2022},
+    {id:'path_002',subject:'Pathology',system:'Hematology',topic:'Anemias',question:'Most common cause of anemia worldwide is:',options:['Vitamin B12 deficiency','Folate deficiency','Iron deficiency','Hemolytic anemia'],correct:2,explanation:'Iron deficiency anemia is the most common nutritional deficiency and the leading cause of anemia worldwide, affecting approximately 2 billion people, especially women and children.',difficulty:'easy',exam:'neet',year:2023},
+    {id:'pharm_001',subject:'Pharmacology',system:'ANS',topic:'Cholinergics',question:'Which drug is used as antidote for organophosphate poisoning?',options:['Physostigmine','Neostigmine','Atropine','Pyridostigmine'],correct:2,explanation:'Atropine (competitive muscarinic antagonist) is the primary antidote for organophosphate poisoning. It blocks muscarinic effects. Pralidoxime (2-PAM) is used to regenerate cholinesterase.',difficulty:'medium',exam:'neet',year:2021}
+  ];
+}
+
+function getDemoFlashCards() {
+  return [
+    {id:'fc_001',subject:'Anatomy',system:'Musculoskeletal',topic:'Upper Limb',question:"What deformity is caused by ulnar nerve injury at the wrist?",answer:'Claw Hand (Main en griffe)',explanation:'Ulnar nerve injury at wrist causes claw hand due to paralysis of medial two lumbricals and interossei, leading to hyperextension at MCP joints and flexion at IP joints of ring and little fingers.'},
+    {id:'fc_002',subject:'Physiology',system:'Cardiovascular',topic:'Cardiac Cycle',question:'What is the formula for Cardiac Output?',answer:'CO = Stroke Volume × Heart Rate',explanation:'Cardiac Output = Stroke Volume × Heart Rate. Normal values: SV ≈ 70 mL, HR ≈ 70 bpm, CO ≈ 5 L/min at rest.'},
+    {id:'fc_003',subject:'Biochemistry',system:'Metabolism',topic:'Glycolysis',question:'How many ATP are produced per glucose in glycolysis?',answer:'Net 2 ATP',explanation:'Glycolysis produces 4 ATP gross but uses 2 ATP (hexokinase and PFK-1 steps), giving net 2 ATP. Also produces 2 NADH and 2 pyruvate per glucose.'},
+    {id:'fc_004',subject:'Pathology',system:'General Pathology',topic:'Neoplasia',question:'What is the hallmark of caseous necrosis?',answer:'Cheese-like amorphous material, seen in TB',explanation:'Caseous necrosis appears as amorphous, granular, eosinophilic material like cottage cheese. It is the hallmark of tuberculosis and some fungal infections.'},
+    {id:'fc_005',subject:'Pharmacology',system:'ANS',topic:'Cholinergics',question:'Antidote for organophosphate poisoning?',answer:'Atropine + Pralidoxime (2-PAM)',explanation:'Atropine blocks muscarinic receptors. Pralidoxime regenerates acetylcholinesterase if given early (before aging). Together they treat both muscarinic and nicotinic toxicity.'}
+  ];
+}
+
+// ═══════════════════════════════════════════
+// AUTH FUNCTIONS
+// ═══════════════════════════════════════════
+
+function switchAuthTab(tab, btn) {
+  document.querySelectorAll('#authTab button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('loginForm').style.display = tab==='login'?'block':'none';
+  document.getElementById('signupForm').style.display = tab==='signup'?'block':'none';
+}
+
+function handleLogin() {
+  const email = document.getElementById('loginEmail').value;
+  const pass = document.getElementById('loginPass').value;
+  if (!email || !pass) { alert('Please fill in all fields'); return; }
+  state.user = {name:'Arjun Mehta', email, initials:'AM'};
+  initApp();
+}
+
+function handleSignup() {
+  const name = document.getElementById('suName').value;
+  if (!name) { alert('Please fill in all fields'); return; }
+  state.user = {name, email: document.getElementById('suEmail').value, initials: name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2)};
+  showOnly('screen-onboard-college');
+}
+
+function handleGoogleLogin() {
+  state.user = {name:'Arjun Mehta', email:'arjun@gmail.com', initials:'AM'};
+  showOnly('screen-onboard-college');
+}
+
+function selectCollege(el, name) {
+  document.querySelectorAll('.college-item').forEach(i=>i.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedCollege = name;
+}
+
+function goToOTP() {
+  if (!state.selectedCollege) { alert('Please select your college'); return; }
+  showOnly('screen-onboard-otp');
+}
+
+function sendOTP() {
+  const mob = document.getElementById('mobileNum').value;
+  if (mob.length < 10) { alert('Please enter a valid mobile number'); return; }
+  document.getElementById('otpSection').style.display = 'block';
+  alert('OTP sent! For demo, use any 6-digit number.');
+}
+
+function otpFocus(el, idx) {
+  if (el.value && idx < 6) {
+    el.nextElementSibling && el.nextElementSibling.focus();
+  }
+}
+
+function verifyOTP() {
+  initApp();
+}
+
+function initApp() {
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-onboard-college').classList.remove('active');
+  document.getElementById('screen-onboard-otp').classList.remove('active');
+  document.getElementById('app').style.display = 'block';
+  
+  const u = state.user;
+  document.getElementById('homeGreet').textContent = 'Dr. ' + (u.name.split(' ')[0]);
+  document.getElementById('homeAvatar').textContent = u.initials || u.name[0];
+  
+  loadQuestionsFromFolder();
+  loadFlashCardsFromFolder();
+  updateSubjectCounts();
+  renderPPYears();
+  renderPPSubjectFilter();
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+
+function showOnly(id) {
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.remove('active');
+    if (s.closest('#app') === null) s.style.display='';
+  });
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('active'); el.scrollTop=0; }
+}
+
+function showScreen(id) {
+  state.lastScreen = id;
+  if (id === 'screen-login') { showOnly(id); return; }
+  // If we're in app
+  document.querySelectorAll('#app .screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('active'); el.scrollTop=0; }
+}
+
+function navTo(section) {
+  document.querySelectorAll('.nav-item').forEach(ni=>{
+    ni.classList.toggle('active', ni.dataset.nav===section);
+  });
+  showScreen('screen-'+section);
+}
+
+function goBack() {
+  showScreen(state.lastScreen || 'screen-home');
+}
+
+// ═══════════════════════════════════════════
+// SUBJECT COUNTS & RENDERING
+// ═══════════════════════════════════════════
+
+const subjectCounts = {};
+const systemCounts = {};
+const topicCounts = {};
+
+function updateSubjectCounts() {
+  allQuestions.forEach(q => {
+    subjectCounts[q.subject] = (subjectCounts[q.subject]||0)+1;
+    const sKey = q.subject+'::'+q.system;
+    systemCounts[sKey] = (systemCounts[sKey]||0)+1;
+    const tKey = q.subject+'::'+q.system+'::'+q.topic;
+    topicCounts[tKey] = (topicCounts[tKey]||0)+1;
+  });
+}
+
+function renderSubjectList() {
+  const list = document.getElementById('subjectList');
+  if (!list) return;
+  list.innerHTML = '';
+  SUBJECTS.forEach((subj,si) => {
+    const cnt = subjectCounts[subj.name]||0;
+    const div = document.createElement('div');
+    div.className = 'subj-row';
+    div.innerHTML = `
+      <div class="subj-hdr" onclick="toggleSubject(${si})">
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <span class="subj-icon">${subj.icon}</span>
+          <span class="subj-name">${subj.name}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <span class="subj-cnt">${cnt} Qs</span>
+          <span id="subj-chev-${si}" style="color:var(--hint);transition:.3s;">›</span>
+        </div>
+      </div>
+      <div class="subj-expand" id="subj-exp-${si}">
+        ${subj.systems.map((sys,xi) => {
+          const sKey = subj.name+'::'+sys.name;
+          const sCnt = systemCounts[sKey]||0;
+          return `<div class="sys-item" onclick="toggleSystem(${si},${xi},event)">
+            <span style="font-weight:600;font-size:.85rem;">${sys.name}</span>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <span class="badge">${sCnt} Qs</span>
+              <span id="sys-chev-${si}-${xi}" style="color:var(--hint);">›</span>
+            </div>
+          </div>
+          <div class="subj-expand" id="sys-exp-${si}-${xi}">
+            ${sys.topics.map(tp=>{
+              const tKey = subj.name+'::'+sys.name+'::'+tp;
+              const tCnt = topicCounts[tKey]||0;
+              return `<div class="topic-item" onclick="alert('Navigating to ${tp} in MCQ section...')">
+                <span>${tp}</span>
+                <span style="font-size:.7rem;color:var(--mint-dk);font-weight:700;">${tCnt} Qs</span>
+              </div>`;
+            }).join('')}
+          </div>`;
+        }).join('')}
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+function toggleSubject(si) {
+  const exp = document.getElementById(`subj-exp-${si}`);
+  const chev = document.getElementById(`subj-chev-${si}`);
+  const isOpen = exp.classList.contains('open');
+  exp.classList.toggle('open');
+  chev.style.transform = isOpen ? '' : 'rotate(90deg)';
+}
+
+function toggleSystem(si, xi, e) {
+  e.stopPropagation();
+  const exp = document.getElementById(`sys-exp-${si}-${xi}`);
+  const chev = document.getElementById(`sys-chev-${si}-${xi}`);
+  const isOpen = exp.classList.contains('open');
+  exp.classList.toggle('open');
+  chev.style.transform = isOpen ? '' : 'rotate(90deg)';
+}
+
+// ═══════════════════════════════════════════
+// EXAM ANALYSIS
+// ═══════════════════════════════════════════
+
+function switchExamTab(exam, btn) {
+  document.querySelectorAll('#examAnalysisTab button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  state.currentExamAnalysis = exam;
+  renderAnalysis();
+}
+
+function renderAnalysis() {
+  const list = document.getElementById('analysisSubjList');
+  if (!list) return;
+  const exam = state.currentExamAnalysis;
+  const examQs = allQuestions.filter(q=>q.exam===exam);
+  const total = examQs.length||1;
+  
+  list.innerHTML = '';
+  SUBJECTS.forEach((subj,si) => {
+    const subjQs = examQs.filter(q=>q.subject===subj.name);
+    if (subjQs.length===0 && exam!=='neet') {
+      // skip empty for non-neet
+    }
+    const cnt = subjQs.length;
+    const pct = Math.round(cnt/total*100);
+    const div = document.createElement('div');
+    div.className = 'as-row';
+    div.innerHTML = `
+      <div class="as-hdr" onclick="toggleAnalysis(${si})">
+        <span>${subj.icon}</span>
+        <span class="as-name" style="flex:1;margin-left:.5rem;">${subj.name}</span>
+        <div class="as-bar-wrap"><div class="as-bar" style="width:${pct}%"></div></div>
+        <span class="as-num">${cnt} Qs</span>
+      </div>
+      <div class="as-systems subj-expand" id="as-exp-${si}">
+        ${subj.systems.map(sys=>{
+          const sQs = subjQs.filter(q=>q.system===sys.name);
+          return `<div class="as-sys" onclick="startAnalysisTest('${subj.name}','${sys.name}')">
+            <span>${sys.name}</span>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <span class="badge">${sQs.length} Qs</span>
+              <span style="color:var(--mint-dk);font-size:.8rem;">→ Test</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    list.appendChild(div);
+  });
+  
+  // Add Take Test button
+  const btn = document.createElement('button');
+  btn.className = 'take-test-btn';
+  btn.textContent = `Take ${exam.toUpperCase()} Test →`;
+  btn.onclick = () => {
+    state.selectedExams = [exam];
+    state.selectedSubjects = [...SUBJECTS.map(s=>s.name)];
+    navTo('mcq');
+  };
+  list.appendChild(btn);
+}
+
+function toggleAnalysis(si) {
+  const exp = document.getElementById(`as-exp-${si}`);
+  exp.classList.toggle('open');
+}
+
+function startAnalysisTest(subject, system) {
+  state.selectedSubjects = [subject];
+  state.testMode = 'exam';
+  navTo('mcq');
+  setTimeout(()=>{ startTest(); },100);
+}
+
+// ═══════════════════════════════════════════
+// MCQ CONFIG
+// ═══════════════════════════════════════════
+
+function renderSubjectSelect() {
+  const container = document.getElementById('subjectSelect');
+  if (!container) return;
+  container.innerHTML = '';
+  SUBJECTS.forEach(subj => {
+    const isChecked = state.selectedSubjects.includes(subj.name);
+    const div = document.createElement('div');
+    div.className = 'subject-check';
+    div.onclick = () => toggleSubjectSelect(subj.name, div);
+    div.innerHTML = `
+      <div class="cb ${isChecked?'checked':''}" id="cb-${subj.name.replace(/\s/g,'_')}">${isChecked?'✓':''}</div>
+      <span style="font-size:.88rem;font-weight:500;">${subj.icon} ${subj.name}</span>
+      <span class="badge" style="margin-left:auto;">${subjectCounts[subj.name]||0}</span>`;
+    container.appendChild(div);
+  });
+}
+
+function toggleSubjectSelect(name, el) {
+  const idx = state.selectedSubjects.indexOf(name);
+  if (idx>-1) state.selectedSubjects.splice(idx,1);
+  else state.selectedSubjects.push(name);
+  const cb = el.querySelector('.cb');
+  const checked = state.selectedSubjects.includes(name);
+  cb.classList.toggle('checked', checked);
+  cb.textContent = checked?'✓':'';
+}
+
+function selectAllSubjects() {
+  state.selectedSubjects = [...SUBJECTS.map(s=>s.name)];
+  renderSubjectSelect();
+}
+
+function setMode(m) {
+  state.testMode = m;
+  document.getElementById('modeExam').classList.toggle('active',m==='exam');
+  document.getElementById('modeStudy').classList.toggle('active',m==='study');
+}
+
+function setNum(btn, n) {
+  state.numQuestions = n;
+  document.querySelectorAll('#numQGrid .sel-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function toggleExamFilter(btn, exam) {
+  btn.classList.toggle('active');
+  const active = [...document.querySelectorAll('#mcqConfig .select-grid .sel-pill.active')].map(b=>b.textContent.toLowerCase().trim());
+  state.selectedExams = active.filter(e=>['aiims','inicet','neet'].includes(e));
+  if (state.selectedExams.length===0) state.selectedExams=['neet'];
+}
+
+function setDiff(btn, d) {
+  state.selectedDiff = d;
+  document.querySelectorAll('.config-section:last-of-type .sel-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function togglePill(btn) {
+  btn.classList.toggle('active');
+}
+
+function openGrandTest() {
+  state.numQuestions = 200;
+  state.selectedSubjects = [...SUBJECTS.map(s=>s.name)];
+  startTest();
+}
+
+function openCombinedTest() {
+  state.selectedSubjects = [...SUBJECTS.map(s=>s.name)];
+  renderSubjectSelect();
+}
+
+// ═══════════════════════════════════════════
+// TEST ENGINE
+// ═══════════════════════════════════════════
+
+function startTest() {
+  // Filter questions
+  let pool = allQuestions.filter(q => {
+    const subjMatch = state.selectedSubjects.includes(q.subject);
+    const examMatch = state.selectedExams.includes(q.exam);
+    const diffMatch = state.selectedDiff==='all' || q.difficulty===state.selectedDiff;
+    return subjMatch && examMatch && diffMatch;
+  });
+  
+  if (pool.length === 0) {
+    // Use all questions as fallback
+    pool = allQuestions;
+  }
+  
+  // Shuffle
+  pool = pool.sort(()=>Math.random()-.5);
+  state.currentTest = pool.slice(0, Math.min(state.numQuestions, pool.length));
+  state.currentQIndex = 0;
+  state.answers = new Array(state.currentTest.length).fill(null);
+  
+  showScreen('screen-test-active');
+  document.getElementById('testTimer').style.display = state.testMode==='exam'?'block':'none';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = state.currentTest[state.currentQIndex];
+  if (!q) { endTest(); return; }
+  
+  const total = state.currentTest.length;
+  const cur = state.currentQIndex;
+  
+  document.getElementById('testProgFill').style.width = (cur/total*100)+'%';
+  document.getElementById('qCounter').textContent = `${cur+1}/${total}`;
+  document.getElementById('qNum').textContent = `Question ${cur+1} of ${total}`;
+  document.getElementById('qText').textContent = q.question;
+  
+  // Meta chips
+  const meta = document.getElementById('qMeta');
+  meta.innerHTML = `
+    <span class="chip chip-blue">${q.subject}</span>
+    <span class="chip chip-green">${q.system||''}</span>
+    <span class="chip chip-amber">${q.difficulty}</span>
+    <span class="chip chip-purple">${(q.exam||'').toUpperCase()} ${q.year||''}</span>`;
+  
+  // Options
+  const opts = document.getElementById('optionsContainer');
+  opts.innerHTML = '';
+  const letters = ['A','B','C','D','E'];
+  q.options.forEach((opt,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.onclick = () => selectOption(i);
+    
+    // Restore if answered
+    if (state.answers[cur] !== null) {
+      if (i === q.correct) btn.classList.add('correct');
+      else if (i === state.answers[cur]) btn.classList.add('wrong');
+      btn.disabled = true;
+    }
+    opts.appendChild(btn);
+  });
+  
+  // Explanation (study mode)
+  const expBox = document.getElementById('explanationBox');
+  if (state.testMode==='study' && state.answers[cur]!==null) {
+    expBox.style.display = 'block';
+    expBox.innerHTML = `<strong>Explanation</strong>${q.explanation}`;
+  } else {
+    expBox.style.display = 'none';
+  }
+  
+  // Bookmark button
+  document.getElementById('bmarkBtn').className = 'btn-bmark' + (state.bookmarks.has(q.id)?' marked':'');
+  
+  // Timer (exam mode)
+  if (state.testMode === 'exam') {
+    clearInterval(state.timerInterval);
+    state.timeLeft = 60;
+    updateTimer();
+    state.timerInterval = setInterval(()=>{
+      state.timeLeft--;
+      updateTimer();
+      if (state.timeLeft <= 0) {
+        clearInterval(state.timerInterval);
+        skipQuestion();
+      }
+    }, 1000);
+  }
+}
+
+function updateTimer() {
+  const el = document.getElementById('testTimer');
+  const s = state.timeLeft;
+  el.textContent = `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+  el.style.color = s<=10 ? '#EF4444' : 'var(--rose)';
+}
+
+function selectOption(idx) {
+  const q = state.currentTest[state.currentQIndex];
+  if (state.answers[state.currentQIndex] !== null) return;
+  
+  state.answers[state.currentQIndex] = idx;
+  
+  if (state.testMode === 'exam') {
+    clearInterval(state.timerInterval);
+  }
+  
+  // Update UI
+  const opts = document.querySelectorAll('.opt-btn');
+  opts.forEach((btn,i) => {
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add('correct');
+    else if (i === idx) btn.classList.add('wrong');
+  });
+  
+  // Study mode: show explanation
+  if (state.testMode === 'study') {
+    const expBox = document.getElementById('explanationBox');
+    expBox.style.display = 'block';
+    expBox.innerHTML = `<strong>${idx===q.correct?'✅ Correct!':'❌ Incorrect'}</strong>${q.explanation}`;
+  }
+}
+
+function skipQuestion() {
+  if (state.answers[state.currentQIndex] === null) {
+    state.answers[state.currentQIndex] = -1; // skipped
+  }
+  nextQuestion();
+}
+
+function nextQuestion() {
+  clearInterval(state.timerInterval);
+  if (state.currentQIndex < state.currentTest.length-1) {
+    state.currentQIndex++;
+    renderQuestion();
+  } else {
+    endTest();
+  }
+}
+
+function confirmEndTest() {
+  if (confirm('End test and see results?')) {
+    clearInterval(state.timerInterval);
+    endTest();
+  }
+}
+
+function endTest() {
+  clearInterval(state.timerInterval);
+  const correct = state.answers.filter((a,i)=>a===state.currentTest[i].correct).length;
+  const wrong = state.answers.filter(a=>a!=null&&a!==-1).length - correct;
+  const skipped = state.answers.filter(a=>a===null||a===-1).length;
+  const total = state.currentTest.length;
+  const pct = Math.round(correct/total*100);
+  
+  document.getElementById('resPct').textContent = pct+'%';
+  document.getElementById('resCorrect').textContent = correct;
+  document.getElementById('resWrong').textContent = wrong;
+  document.getElementById('resSkipped').textContent = skipped;
+  document.getElementById('reviewSection').style.display = 'none';
+  
+  const msgs = ['🌟 Outstanding! Keep it up!','💪 Great work! Almost there!','📚 Good effort! Review your mistakes.','🔄 Keep practicing, you can do it!'];
+  document.getElementById('resMsg').textContent = pct>=80?msgs[0]:pct>=60?msgs[1]:pct>=40?msgs[2]:msgs[3];
+  
+  showScreen('screen-result');
+}
+
+function reviewAnswers() {
+  const sec = document.getElementById('reviewSection');
+  const list = document.getElementById('reviewList');
+  sec.style.display = 'block';
+  list.innerHTML = '';
+  
+  state.currentTest.forEach((q,i) => {
+    const ans = state.answers[i];
+    const isCorrect = ans === q.correct;
+    const isSkipped = ans === null || ans === -1;
+    const div = document.createElement('div');
+    div.className = 'bm-item';
+    div.style.borderLeft = `3px solid ${isCorrect?'var(--mint)':isSkipped?'var(--amber)':'var(--rose)'}`;
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem;">
+        <div style="font-size:.75rem;font-weight:700;color:${isCorrect?'var(--mint-dk)':isSkipped?'#92400E':'var(--rose)'};">${isCorrect?'✅ Correct':isSkipped?'⏭ Skipped':'❌ Wrong'}</div>
+        <span class="chip chip-blue" style="font-size:.65rem;">${q.subject}</span>
+      </div>
+      <div class="bm-q">${q.question}</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:.4rem;">Correct: ${q.options[q.correct]}</div>
+      ${!isCorrect?`<div style="font-size:.78rem;color:var(--rose);">Your answer: ${ans>-1&&ans!=null?q.options[ans]:'Skipped'}</div>`:''}
+      <div style="font-size:.78rem;color:var(--muted);margin-top:.5rem;line-height:1.5;border-top:1px solid var(--border);padding-top:.5rem;">${q.explanation}</div>`;
+    list.appendChild(div);
+  });
+  
+  sec.scrollIntoView({behavior:'smooth'});
+}
+
+function toggleBookmark() {
+  const q = state.currentTest[state.currentQIndex];
+  if (!q) return;
+  if (state.bookmarks.has(q.id)) state.bookmarks.delete(q.id);
+  else state.bookmarks.add(q.id);
+  document.getElementById('bmarkBtn').className = 'btn-bmark' + (state.bookmarks.has(q.id)?' marked':'');
+}
+
+function showBookmarks() {
+  alert('Bookmarks: ' + state.bookmarks.size + ' questions saved. In the full version, these would appear as a filterable list and flash cards.');
+}
+
+// ═══════════════════════════════════════════
+// PREVIOUS PAPERS
+// ═══════════════════════════════════════════
+
+const PAPER_YEARS = {
+  aiims: [2017,2018,2019,2020],
+  inicet: [2021,2022,2023,2024],
+  neet: [2018,2019,2020,2021,2022,2023,2024]
+};
+
+function setPPExam(btn, exam) {
+  document.querySelectorAll('#screen-papers .sel-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  state.ppExam = exam;
+  state.ppYear = null;
+  renderPPYears();
+}
+
+function renderPPYears() {
+  const scroll = document.getElementById('yearScroll');
+  if (!scroll) return;
+  const years = PAPER_YEARS[state.ppExam]||[];
+  scroll.innerHTML = '';
+  years.forEach(yr => {
+    const btn = document.createElement('button');
+    btn.className = 'pp-yr' + (state.ppYear===yr?' active':'');
+    btn.textContent = yr;
+    btn.onclick = () => {
+      state.ppYear = yr;
+      document.querySelectorAll('.pp-yr').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    scroll.appendChild(btn);
+  });
+}
+
+function setPPMode(mode) {
+  state.ppMode = mode;
+  document.getElementById('ppModeExam').classList.toggle('active',mode==='exam');
+  document.getElementById('ppModeStudy').classList.toggle('active',mode==='study');
+}
+
+function renderPPSubjectFilter() {
+  const c = document.getElementById('ppSubjFilter');
+  if (!c) return;
+  c.innerHTML = '';
+  SUBJECTS.forEach(subj => {
+    const checked = state.ppSelectedSubjects.includes(subj.name);
+    const div = document.createElement('div');
+    div.className = 'subject-check';
+    div.innerHTML = `<div class="cb ${checked?'checked':''}">${checked?'✓':''}</div><span style="font-size:.85rem;">${subj.icon} ${subj.name}</span>`;
+    div.onclick = () => {
+      const idx = state.ppSelectedSubjects.indexOf(subj.name);
+      if (idx>-1) state.ppSelectedSubjects.splice(idx,1);
+      else state.ppSelectedSubjects.push(subj.name);
+      const cb = div.querySelector('.cb');
+      const now = state.ppSelectedSubjects.includes(subj.name);
+      cb.classList.toggle('checked',now);
+      cb.textContent = now?'✓':'';
+    };
+    c.appendChild(div);
+  });
+}
+
+function startPaperTest() {
+  if (!state.ppYear) { alert('Please select a year'); return; }
+  state.testMode = state.ppMode;
+  state.selectedExams = [state.ppExam];
+  state.selectedSubjects = state.ppSelectedSubjects;
+  state.numQuestions = 200;
+  state.selectedDiff = 'all';
+  startTest();
+}
+
+// ═══════════════════════════════════════════
+// FLASH CARDS
+// ═══════════════════════════════════════════
+
+function setFCSource(btn, src) {
+  document.querySelectorAll('#fcConfigView .sel-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  state.fcSource = src;
+  document.getElementById('fcSubjSelect').style.display = src==='subject'?'block':'none';
+}
+
+function renderFCSubjList() {
+  const c = document.getElementById('fcSubjList');
+  if (!c) return;
+  c.innerHTML = '';
+  SUBJECTS.forEach(subj => {
+    const cnt = allFlashCards.filter(f=>f.subject===subj.name).length;
+    if (cnt===0) return;
+    const btn = document.createElement('button');
+    btn.className = 'sel-pill';
+    btn.textContent = `${subj.icon} ${subj.name} (${cnt})`;
+    btn.onclick = () => {
+      document.querySelectorAll('#fcSubjList .sel-pill').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    c.appendChild(btn);
+  });
+}
+
+function startFlashCards() {
+  let cards = [];
+  if (state.fcSource === 'bookmarks') {
+    cards = allFlashCards.filter(f=>state.fcBookmarks.has(f.id));
+    if (cards.length===0) { alert('No bookmarked flash cards yet!'); return; }
+  } else if (state.fcSource === 'subject') {
+    const sel = document.querySelector('#fcSubjList .sel-pill.active');
+    const subj = sel ? sel.textContent.split(' ').slice(1,-1).join(' ') : '';
+    cards = allFlashCards.filter(f=>f.subject.includes(subj)||!subj);
+  } else {
+    cards = [...allFlashCards];
+  }
+  
+  if (cards.length===0) cards = allFlashCards;
+  state.fcCards = cards.sort(()=>Math.random()-.5);
+  state.fcIndex = 0;
+  state.fcFlipped = false;
+  
+  document.getElementById('fcConfigView').style.display = 'none';
+  document.getElementById('fcActiveView').style.display = 'block';
+  renderFlashCard();
+}
+
+function renderFlashCard() {
+  const card = state.fcCards[state.fcIndex];
+  if (!card) return;
+  
+  state.fcFlipped = false;
+  document.getElementById('fcCard').classList.remove('flipped');
+  document.getElementById('fcFlipBtn').textContent = 'Reveal ✨';
+  document.getElementById('fcQuestion').textContent = card.question;
+  document.getElementById('fcAnswer').textContent = card.answer;
+  document.getElementById('fcExplanation').textContent = card.explanation;
+  
+  const total = state.fcCards.length;
+  const cur = state.fcIndex+1;
+  document.getElementById('fcProgressTxt').textContent = `${cur}/${total}`;
+  document.getElementById('fcProgFill').style.width = (cur/total*100)+'%';
+  
+  document.getElementById('fcBmark').className = 'btn-bmark' + (state.fcBookmarks.has(card.id)?' marked':'');
+}
+
+function flipCard() {
+  state.fcFlipped = !state.fcFlipped;
+  document.getElementById('fcCard').classList.toggle('flipped', state.fcFlipped);
+  document.getElementById('fcFlipBtn').textContent = state.fcFlipped ? '← Back' : 'Reveal ✨';
+}
+
+function nextFlashCard() {
+  if (state.fcIndex < state.fcCards.length-1) {
+    state.fcIndex++;
+    renderFlashCard();
+  } else {
+    alert('🎉 You\'ve completed all flash cards! Great work!');
+    endFlashCards();
+  }
+}
+
+function prevFlashCard() {
+  if (state.fcIndex > 0) {
+    state.fcIndex--;
+    renderFlashCard();
+  }
+}
+
+function toggleFCBookmark() {
+  const card = state.fcCards[state.fcIndex];
+  if (!card) return;
+  if (state.fcBookmarks.has(card.id)) state.fcBookmarks.delete(card.id);
+  else state.fcBookmarks.add(card.id);
+  document.getElementById('fcBmark').className = 'btn-bmark' + (state.fcBookmarks.has(card.id)?' marked':'');
+}
+
+function endFlashCards() {
+  document.getElementById('fcConfigView').style.display = 'block';
+  document.getElementById('fcActiveView').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════
+// CO-STUDY
+// ═══════════════════════════════════════════
+
+function setCOMode(btn, mode) {
+  document.querySelectorAll('.fi-mode').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  state.coMode = mode;
+}
+
+function generateInviteLink() {
+  const link = `https://mediq.app/co-study/${state.coMode}/${Date.now().toString(36)}`;
+  const el = document.getElementById('inviteLink');
+  el.style.display = 'block';
+  el.innerHTML = `🔗 ${link} <button onclick="navigator.clipboard.writeText('${link}').then(()=>alert('Copied!'))" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:.2rem .5rem;border-radius:4px;cursor:pointer;font-size:.72rem;margin-left:.5rem;">Copy</button>`;
+}
+
+function switchLBTab(tab, btn) {
+  document.querySelectorAll('.lb-tab button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('lbGlobal').style.display = tab==='global'?'block':'none';
+  document.getElementById('lbFriends').style.display = tab==='friends'?'block':'none';
+  document.getElementById('lbHistory').style.display = tab==='history'?'block':'none';
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+
+// Render initial state
+renderPPYears();
+</script>
+</body>
+</html>
