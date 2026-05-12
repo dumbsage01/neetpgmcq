@@ -924,47 +924,146 @@ let state = {
 // ═══════════════════════════════════════════
 
 async function loadQuestionsFromFolder() {
-  // In a real deployment, this would fetch from the /questions/ folder
-  // For demo, we'll use embedded data + simulate fetch
-  const demoFiles = ['anatomy','physiology'];
-  const loaded = [];
-  
-  for (const file of demoFiles) {
-    try {
-      const r = await fetch(`questions/${file}.json`);
-      if (r.ok) {
-        const data = await r.json();
-        loaded.push(...data);
-      }
-    } catch(e) {
-      // Use embedded fallback
+  try {
+    // Load the manifest to discover all question files
+    const manifestRes = await fetch('questions/manifest.json');
+    if (!manifestRes.ok) {
+      console.warn('No manifest found, using demo data');
+      allQuestions = getDemoQuestions();
+      finalizeQuestions();
+      return;
     }
-  }
-  
-  if (loaded.length === 0) {
-    // Embedded demo questions
+    const manifest = await manifestRes.json();
+    const files = manifest.files || [];
+
+    const loaded = [];
+    for (const filename of files) {
+      try {
+        const res = await fetch(`questions/${filename}`);
+        if (!res.ok) continue;
+        const data = await res.json();
+        // Handle both array and object with a questions key
+        const questions = Array.isArray(data) ? data : (data.questions || []);
+        questions.forEach(q => {
+          const transformed = transformQuestion(q);
+          if (transformed) loaded.push(transformed);
+        });
+      } catch (e) {
+        console.warn(`Failed to load ${filename}:`, e);
+      }
+    }
+
+    allQuestions = loaded.length > 0 ? loaded : getDemoQuestions();
+  } catch (e) {
+    console.warn('Failed to load questions:', e);
     allQuestions = getDemoQuestions();
-  } else {
-    allQuestions = loaded;
   }
-  
+  finalizeQuestions();
+}
+
+function transformQuestion(q) {
+  try {
+    // Support both your format and the old format
+    // Handle options: object {a,b,c,d} or array
+    let options = [];
+    if (Array.isArray(q.options)) {
+      options = q.options;
+    } else if (typeof q.options === 'object' && q.options !== null) {
+      options = [
+        q.options.a || '',
+        q.options.b || '',
+        q.options.c || '',
+        q.options.d || ''
+      ].filter(o => o !== '');
+    }
+
+    if (options.length === 0) return null;
+
+    // Handle correct answer: "a"/"b"/"c"/"d" or index 0/1/2/3
+    let correct = 0;
+    if (typeof q.correct_option === 'string') {
+      correct = {'a':0,'b':1,'c':2,'d':3}[q.correct_option.toLowerCase()] ?? 0;
+    } else if (typeof q.correct === 'number') {
+      correct = q.correct;
+    } else if (typeof q.correct === 'string') {
+      correct = {'a':0,'b':1,'c':2,'d':3}[q.correct.toLowerCase()] ?? 0;
+    }
+
+    // Handle exam name: "AIIMS", "NEET", "INICET" → lowercase
+    const examRaw = (q.exam_name || q.exam || '').toLowerCase().trim();
+    const exam = examRaw.includes('aiims') ? 'aiims'
+                : examRaw.includes('inicet') ? 'inicet'
+                : 'neet';
+
+    // Handle difficulty: severity field or difficulty field
+    const sevRaw = (q.severity || q.difficulty || 'easy').toLowerCase().trim();
+    const difficulty = sevRaw === 'hard' ? 'hard'
+                     : sevRaw === 'medium' || sevRaw === 'moderate' ? 'medium'
+                     : 'easy';
+
+    // Clean question text (remove image tags for display)
+    const questionText = (q.question || '').replace(/\[[\w\-]+\]/g, '').trim();
+
+    // Build unique ID
+    const id = q.id
+      || `${exam}_${q.exam_year||''}_${q.question_number||''}_${Math.random().toString(36).slice(2,6)}`;
+
+    return {
+      id,
+      subject:    q.subject || 'General',
+      system:     q.subject_ai || q.system || q.subject || 'General',
+      topic:      q.topic || q.sub_topic || 'General',
+      question:   questionText,
+      options,
+      correct,
+      explanation: q.explanation || '',
+      difficulty,
+      exam,
+      year:       parseInt(q.exam_year || q.year) || 0,
+      images:     q.images || [],
+      repeating:  q.repeating || ''
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+function finalizeQuestions() {
   updateSubjectCounts();
   renderSubjectList();
   renderSubjectSelect();
   renderPPSubjectFilter();
   renderAnalysis();
-  document.getElementById('totalQChip').textContent = allQuestions.length + ' Qs';
+  const chip = document.getElementById('totalQChip');
+  if (chip) chip.textContent = allQuestions.length + ' Qs';
 }
 
 async function loadFlashCardsFromFolder() {
   try {
-    const r = await fetch('flashcards/flashcards.json');
-    if (r.ok) {
-      allFlashCards = await r.json();
-    } else {
+    const manifestRes = await fetch('flashcards/manifest.json');
+    if (!manifestRes.ok) {
       allFlashCards = getDemoFlashCards();
+      renderFCSubjList();
+      return;
     }
-  } catch(e) {
+    const manifest = await manifestRes.json();
+    const files = manifest.files || [];
+    const loaded = [];
+
+    for (const filename of files) {
+      try {
+        const res = await fetch(`flashcards/${filename}`);
+        if (!res.ok) continue;
+        const data = await res.json();
+        const cards = Array.isArray(data) ? data : (data.flashcards || []);
+        loaded.push(...cards);
+      } catch (e) {
+        console.warn(`Failed to load flashcard file ${filename}:`, e);
+      }
+    }
+
+    allFlashCards = loaded.length > 0 ? loaded : getDemoFlashCards();
+  } catch (e) {
     allFlashCards = getDemoFlashCards();
   }
   renderFCSubjList();
@@ -1071,7 +1170,7 @@ function initApp() {
   
   loadQuestionsFromFolder();
   loadFlashCardsFromFolder();
-  updateSubjectCounts();
+
   renderPPYears();
   renderPPSubjectFilter();
 }
