@@ -527,6 +527,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-
     <div class="test-foot">
       <button class="btn-skip" id="skipBtn" onclick="skipQuestion()">Skip</button>
       <button class="btn-next" id="nextBtn" onclick="nextQuestion()">Next →</button>
+      <button class="btn-next" id="nextBtnStudy" onclick="nextQuestion()" style="display:none;">Next Question →</button>
     </div>
   </div>
 </div>
@@ -549,17 +550,30 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-
       <div class="rg-card"><div class="rg-num" style="color:var(--amber);" id="resSkipped">0</div><div class="rg-lbl">Skipped</div></div>
     </div>
     <div class="result-actions" style="margin-bottom:1rem;">
-      <button class="r-btn r-btn-primary" onclick="reviewAnswers()">Review Answers</button>
-      <button class="r-btn r-btn-outline" onclick="showScreen('screen-mcq')">New Test</button>
+      <button class="r-btn r-btn-primary" onclick="startReview('all')">Review All</button>
+      <button class="r-btn r-btn-outline" onclick="startReview('wrong')">Wrong Only</button>
     </div>
     <div class="result-actions" style="margin-bottom:1rem;">
-      <button class="r-btn r-btn-outline" onclick="showBookmarks()">🔖 Bookmarks</button>
+      <button class="r-btn r-btn-outline" onclick="showScreen('screen-mcq')">New Test</button>
       <button class="r-btn r-btn-outline" onclick="showScreen('screen-flash')">🃏 Flash Cards</button>
     </div>
     <div class="ad-slot">📢 Advertisement · Watch a short ad to unlock your next test</div>
-    <div id="reviewSection" style="display:none;margin-top:.5rem;">
-      <div style="font-weight:800;font-size:.95rem;margin-bottom:.75rem;">Answer Review</div>
-      <div id="reviewList"></div>
+    
+    <!-- Review Section - Paginated -->
+    <div id="reviewSection" style="display:none;margin-top:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding:0 1.25rem;">
+        <div style="font-weight:800;font-size:.95rem;" id="reviewTitle">Answer Review</div>
+        <div style="font-size:.75rem;color:var(--muted);font-weight:600;" id="reviewPageNum">1/15</div>
+      </div>
+      
+      <!-- Single Review Card -->
+      <div class="bm-item" id="reviewCard" style="margin:0 1.25rem .75rem;"></div>
+      
+      <!-- Navigation -->
+      <div style="display:flex;gap:.75rem;padding:1rem 1.25rem;position:sticky;bottom:90px;background:#fff;border-top:1px solid var(--border);">
+        <button class="btn-skip" id="reviewPrevBtn" onclick="reviewPrevQuestion()">← Prev</button>
+        <button class="btn-next" id="reviewNextBtn" onclick="reviewNextQuestion()">Next →</button>
+      </div>
     </div>
   </div>
 </div>
@@ -772,6 +786,9 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-
 // DATA & STATE
 // ═══════════════════════════════════════════
 
+// IMAGE FOLDER PATH - Change this to your images folder URL
+const IMAGES_FOLDER_PATH = 'images/'; // or 'https://yourcdn.com/images/' if hosted externally
+
 const SUBJECTS = [
   {name:'Anatomy',icon:'🦴',systems:[
     {name:'Musculoskeletal',topics:['Upper Limb','Lower Limb','Vertebral Column','Joints']},
@@ -924,146 +941,47 @@ let state = {
 // ═══════════════════════════════════════════
 
 async function loadQuestionsFromFolder() {
-  try {
-    // Load the manifest to discover all question files
-    const manifestRes = await fetch('questions/manifest.json');
-    if (!manifestRes.ok) {
-      console.warn('No manifest found, using demo data');
-      allQuestions = getDemoQuestions();
-      finalizeQuestions();
-      return;
-    }
-    const manifest = await manifestRes.json();
-    const files = manifest.files || [];
-
-    const loaded = [];
-    for (const filename of files) {
-      try {
-        const res = await fetch(`questions/${filename}`);
-        if (!res.ok) continue;
-        const data = await res.json();
-        // Handle both array and object with a questions key
-        const questions = Array.isArray(data) ? data : (data.questions || []);
-        questions.forEach(q => {
-          const transformed = transformQuestion(q);
-          if (transformed) loaded.push(transformed);
-        });
-      } catch (e) {
-        console.warn(`Failed to load ${filename}:`, e);
+  // In a real deployment, this would fetch from the /questions/ folder
+  // For demo, we'll use embedded data + simulate fetch
+  const demoFiles = ['anatomy','physiology'];
+  const loaded = [];
+  
+  for (const file of demoFiles) {
+    try {
+      const r = await fetch(`questions/${file}.json`);
+      if (r.ok) {
+        const data = await r.json();
+        loaded.push(...data);
       }
+    } catch(e) {
+      // Use embedded fallback
     }
-
-    allQuestions = loaded.length > 0 ? loaded : getDemoQuestions();
-  } catch (e) {
-    console.warn('Failed to load questions:', e);
+  }
+  
+  if (loaded.length === 0) {
+    // Embedded demo questions
     allQuestions = getDemoQuestions();
+  } else {
+    allQuestions = loaded;
   }
-  finalizeQuestions();
-}
-
-function transformQuestion(q) {
-  try {
-    // Support both your format and the old format
-    // Handle options: object {a,b,c,d} or array
-    let options = [];
-    if (Array.isArray(q.options)) {
-      options = q.options;
-    } else if (typeof q.options === 'object' && q.options !== null) {
-      options = [
-        q.options.a || '',
-        q.options.b || '',
-        q.options.c || '',
-        q.options.d || ''
-      ].filter(o => o !== '');
-    }
-
-    if (options.length === 0) return null;
-
-    // Handle correct answer: "a"/"b"/"c"/"d" or index 0/1/2/3
-    let correct = 0;
-    if (typeof q.correct_option === 'string') {
-      correct = {'a':0,'b':1,'c':2,'d':3}[q.correct_option.toLowerCase()] ?? 0;
-    } else if (typeof q.correct === 'number') {
-      correct = q.correct;
-    } else if (typeof q.correct === 'string') {
-      correct = {'a':0,'b':1,'c':2,'d':3}[q.correct.toLowerCase()] ?? 0;
-    }
-
-    // Handle exam name: "AIIMS", "NEET", "INICET" → lowercase
-    const examRaw = (q.exam_name || q.exam || '').toLowerCase().trim();
-    const exam = examRaw.includes('aiims') ? 'aiims'
-                : examRaw.includes('inicet') ? 'inicet'
-                : 'neet';
-
-    // Handle difficulty: severity field or difficulty field
-    const sevRaw = (q.severity || q.difficulty || 'easy').toLowerCase().trim();
-    const difficulty = sevRaw === 'hard' ? 'hard'
-                     : sevRaw === 'medium' || sevRaw === 'moderate' ? 'medium'
-                     : 'easy';
-
-    // Clean question text (remove image tags for display)
-    const questionText = (q.question || '').replace(/\[[\w\-]+\]/g, '').trim();
-
-    // Build unique ID
-    const id = q.id
-      || `${exam}_${q.exam_year||''}_${q.question_number||''}_${Math.random().toString(36).slice(2,6)}`;
-
-    return {
-      id,
-      subject:    q.subject || 'General',
-      system:     q.subject_ai || q.system || q.subject || 'General',
-      topic:      q.topic || q.sub_topic || 'General',
-      question:   questionText,
-      options,
-      correct,
-      explanation: q.explanation || '',
-      difficulty,
-      exam,
-      year:       parseInt(q.exam_year || q.year) || 0,
-      images:     q.images || [],
-      repeating:  q.repeating || ''
-    };
-  } catch (e) {
-    return null;
-  }
-}
-
-function finalizeQuestions() {
+  
   updateSubjectCounts();
   renderSubjectList();
   renderSubjectSelect();
   renderPPSubjectFilter();
   renderAnalysis();
-  const chip = document.getElementById('totalQChip');
-  if (chip) chip.textContent = allQuestions.length + ' Qs';
+  document.getElementById('totalQChip').textContent = allQuestions.length + ' Qs';
 }
 
 async function loadFlashCardsFromFolder() {
   try {
-    const manifestRes = await fetch('flashcards/manifest.json');
-    if (!manifestRes.ok) {
+    const r = await fetch('flashcards/flashcards.json');
+    if (r.ok) {
+      allFlashCards = await r.json();
+    } else {
       allFlashCards = getDemoFlashCards();
-      renderFCSubjList();
-      return;
     }
-    const manifest = await manifestRes.json();
-    const files = manifest.files || [];
-    const loaded = [];
-
-    for (const filename of files) {
-      try {
-        const res = await fetch(`flashcards/${filename}`);
-        if (!res.ok) continue;
-        const data = await res.json();
-        const cards = Array.isArray(data) ? data : (data.flashcards || []);
-        loaded.push(...cards);
-      } catch (e) {
-        console.warn(`Failed to load flashcard file ${filename}:`, e);
-      }
-    }
-
-    allFlashCards = loaded.length > 0 ? loaded : getDemoFlashCards();
-  } catch (e) {
+  } catch(e) {
     allFlashCards = getDemoFlashCards();
   }
   renderFCSubjList();
@@ -1170,7 +1088,7 @@ function initApp() {
   
   loadQuestionsFromFolder();
   loadFlashCardsFromFolder();
-
+  updateSubjectCounts();
   renderPPYears();
   renderPPSubjectFilter();
 }
@@ -1488,6 +1406,22 @@ function renderQuestion() {
     <span class="chip chip-amber">${q.difficulty}</span>
     <span class="chip chip-purple">${(q.exam||'').toUpperCase()} ${q.year||''}</span>`;
   
+  // Images container
+  const qBody = document.querySelector('.q-body');
+  let imagesHtml = '';
+  if (q.images && q.images.length > 0) {
+    imagesHtml = '<div style="margin-bottom:1rem;">';
+    q.images.forEach(img => {     
+      const imagePath = IMAGES_FOLDER_PATH + img + '.jpeg'; // adjust extension if needed
+      imagesHtml += `<img src="${imagePath}" alt="Question image" style="max-width:100%;border-radius:8px;margin-bottom:.5rem;border:1px solid var(--border);" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23f0f4f8%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2214%22 fill=%22%236B7A8D%22%3EImage: ${img}%3C/text%3E%3C/svg%3E'">`;
+    });
+    imagesHtml += '</div>';
+  }
+  
+  // Insert images before question text
+  const qTextEl = document.getElementById('qText');
+  qTextEl.innerHTML = imagesHtml + qTextEl.textContent;
+  
   // Options
   const opts = document.getElementById('optionsContainer');
   opts.innerHTML = '';
@@ -1518,6 +1452,11 @@ function renderQuestion() {
   
   // Bookmark button
   document.getElementById('bmarkBtn').className = 'btn-bmark' + (state.bookmarks.has(q.id)?' marked':'');
+  
+  // Show/hide buttons based on mode
+  document.getElementById('skipBtn').style.display = state.testMode==='exam'?'block':'none';
+  document.getElementById('nextBtn').style.display = state.testMode==='exam'?'block':'none';
+  document.getElementById('nextBtnStudy').style.display = state.testMode==='study'?'block':'none';
   
   // Timer (exam mode)
   if (state.testMode === 'exam') {
@@ -1612,32 +1551,85 @@ function endTest() {
   showScreen('screen-result');
 }
 
-function reviewAnswers() {
-  const sec = document.getElementById('reviewSection');
-  const list = document.getElementById('reviewList');
-  sec.style.display = 'block';
-  list.innerHTML = '';
+// Review state
+let reviewQuestions = [];
+let reviewIndex = 0;
+let reviewMode = 'all'; // 'all' or 'wrong'
+
+function startReview(mode) {
+  reviewMode = mode;
+  const allReview = state.currentTest.map((q,i) => ({
+    question: q,
+    index: i,
+    answer: state.answers[i],
+    isCorrect: state.answers[i] === q.correct,
+    isSkipped: state.answers[i] === null || state.answers[i] === -1
+  }));
   
-  state.currentTest.forEach((q,i) => {
-    const ans = state.answers[i];
-    const isCorrect = ans === q.correct;
-    const isSkipped = ans === null || ans === -1;
-    const div = document.createElement('div');
-    div.className = 'bm-item';
-    div.style.borderLeft = `3px solid ${isCorrect?'var(--mint)':isSkipped?'var(--amber)':'var(--rose)'}`;
-    div.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem;">
-        <div style="font-size:.75rem;font-weight:700;color:${isCorrect?'var(--mint-dk)':isSkipped?'#92400E':'var(--rose)'};">${isCorrect?'✅ Correct':isSkipped?'⏭ Skipped':'❌ Wrong'}</div>
-        <span class="chip chip-blue" style="font-size:.65rem;">${q.subject}</span>
-      </div>
-      <div class="bm-q">${q.question}</div>
-      <div style="font-size:.78rem;color:var(--muted);margin-bottom:.4rem;">Correct: ${q.options[q.correct]}</div>
-      ${!isCorrect?`<div style="font-size:.78rem;color:var(--rose);">Your answer: ${ans>-1&&ans!=null?q.options[ans]:'Skipped'}</div>`:''}
-      <div style="font-size:.78rem;color:var(--muted);margin-top:.5rem;line-height:1.5;border-top:1px solid var(--border);padding-top:.5rem;">${q.explanation}</div>`;
-    list.appendChild(div);
-  });
+  if (mode === 'wrong') {
+    reviewQuestions = allReview.filter(r => !r.isCorrect);
+  } else {
+    reviewQuestions = allReview;
+  }
   
-  sec.scrollIntoView({behavior:'smooth'});
+  if (reviewQuestions.length === 0) {
+    alert(mode === 'wrong' ? 'No incorrect answers!' : 'No questions to review');
+    return;
+  }
+  
+  reviewIndex = 0;
+  document.getElementById('reviewSection').style.display = 'block';
+  document.getElementById('reviewTitle').textContent = mode === 'wrong' ? 'Wrong Answers Review' : 'All Answers Review';
+  renderReviewCard();
+}
+
+function renderReviewCard() {
+  if (reviewQuestions.length === 0) return;
+  
+  const r = reviewQuestions[reviewIndex];
+  const q = r.question;
+  
+  document.getElementById('reviewPageNum').textContent = `${reviewIndex+1}/${reviewQuestions.length}`;
+  
+  let statusColor = r.isCorrect ? 'var(--mint)' : r.isSkipped ? 'var(--amber)' : 'var(--rose)';
+  let statusText = r.isCorrect ? '✅ Correct' : r.isSkipped ? '⏭ Skipped' : '❌ Wrong';
+  let statusBg = r.isCorrect ? 'var(--mint-lt)' : r.isSkipped ? 'var(--amber-lt)' : 'var(--rose-lt)';
+  
+  const card = document.getElementById('reviewCard');
+  card.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+      <div style="font-size:.75rem;font-weight:700;color:${statusColor};">${statusText}</div>
+      <span class="chip chip-blue" style="font-size:.65rem;">${q.subject}</span>
+    </div>
+    <div style="background:${statusBg};padding:.75rem;border-radius:10px;margin-bottom:.75rem;">
+      <div style="font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:.5rem;">Q${r.index+1}: ${q.question}</div>
+    </div>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:.4rem;"><strong>Correct Answer:</strong> ${q.options[q.correct]}</div>
+    ${!r.isCorrect?`<div style="font-size:.78rem;color:var(--rose);margin-bottom:.6rem;"><strong>Your Answer:</strong> ${r.isSkipped?'Skipped':q.options[r.answer]}</div>`:''}
+    <div style="font-size:.78rem;color:var(--text);line-height:1.6;background:var(--bg);padding:.75rem;border-radius:8px;border-left:3px solid var(--mint);">
+      <div style="font-weight:700;color:var(--mint-dk);margin-bottom:.5rem;">💡 Explanation</div>
+      ${q.explanation}
+    </div>`;
+  
+  // Update button states
+  document.getElementById('reviewPrevBtn').disabled = reviewIndex === 0;
+  document.getElementById('reviewNextBtn').disabled = reviewIndex === reviewQuestions.length - 1;
+}
+
+function reviewNextQuestion() {
+  if (reviewIndex < reviewQuestions.length - 1) {
+    reviewIndex++;
+    renderReviewCard();
+    document.getElementById('reviewCard').scrollIntoView({behavior:'smooth'});
+  }
+}
+
+function reviewPrevQuestion() {
+  if (reviewIndex > 0) {
+    reviewIndex--;
+    renderReviewCard();
+    document.getElementById('reviewCard').scrollIntoView({behavior:'smooth'});
+  }
 }
 
 function toggleBookmark() {
